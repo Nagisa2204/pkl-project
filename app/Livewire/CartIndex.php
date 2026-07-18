@@ -33,7 +33,7 @@ class CartIndex extends Component
         $this->dispatch('cartUpdated');
     }
     
-    public function decrementQuantity($itemId)
+    public function decrementQuantity(CartItem $itemId)
     {
         $cartItem = CartItem::findOrFail($itemId);
 
