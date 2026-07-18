@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('sku', 255)->unique();
             $table->longtext('description')->nullable();
             $table->unsignedBigInteger('price');
-            $table->string('stock_status', 30)->default('instock');
+            $table->string('stock_status', 30)->default('avaible');
             $table->unsignedInteger('stock_quantity')->default(0);
             $table->unsignedInteger('weight_grams');
             $table->unsignedInteger('preorder_days')->default(0);

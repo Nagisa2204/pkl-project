@@ -22,10 +22,7 @@ class ProductFactory extends Factory
             'slug' => fake()->name(),
             'sku' => fake()->name(),
             'price' => fake()->randomNumber(6),
-            'stock_status' => fake()->randomElement(['available', 'unavailable']),
-            'stock_quantity' => fake()->randomNumber(2),
-            'weight_grams' => fake()->randomNumber(4),
-            'is_active' => fake()->boolean(),
+            'weight_grams' => fake()->randomNumber(4)
         ];
     }
 }
