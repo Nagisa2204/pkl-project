@@ -13,7 +13,7 @@ class CartIndex extends Component
 {
     public function getCartProducts()
     {
-        return Cart::with('cartItems.product.images')->where('user_id', Auth::id())->where('status', 'active')->first();
+        return Cart::with('cartItems.product.images')->where('user_id', Auth::id())->first();
     }
 
     public function incrementQuantity($itemId)
@@ -33,7 +33,7 @@ class CartIndex extends Component
         $this->dispatch('cartUpdated');
     }
     
-    public function decrementQuantity(CartItem $itemId)
+    public function decrementQuantity($itemId)
     {
         $cartItem = CartItem::findOrFail($itemId);
 

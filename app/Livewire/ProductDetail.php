@@ -26,7 +26,7 @@ class ProductDetail extends Component
         $user = Auth::user();
 
         DB::transaction(function () use ($user) {
-            $cart = Cart::firstOrCreate(['user_id' => $user->id], ['status' => 'active']);
+            $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
             $product = Product::lockForUpdate()->findOrFail($this->product->id);
 
@@ -55,7 +55,7 @@ class ProductDetail extends Component
 
         $this->dispatch('cartUpdated');
     }
-
+    
     public function render()
     {
         return view('livewire.product-detail');

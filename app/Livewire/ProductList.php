@@ -32,7 +32,7 @@ class ProductList extends Component
         $user = Auth::user();
 
         DB::transaction(function () use ($user, $productId) {
-            $cart = Cart::firstOrCreate(['user_id' => $user->id], ['status' => 'active']);
+            $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
             $product = Product::lockForUpdate()->findOrFail($productId);
 
