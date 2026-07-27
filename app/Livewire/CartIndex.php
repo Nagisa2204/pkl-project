@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CartIndex extends Component
 {
-    public function getCartProducts()
+    public function getCartProperty()
     {
         return Cart::with('cartItems.product.images')->where('user_id', Auth::id())->first();
     }
@@ -55,7 +55,7 @@ class CartIndex extends Component
     public function render()
     {
         return view('livewire.cart-index', [
-            'cart' => $this->getCartProducts()
+            'cart' => $this->cart
         ]);
     }
 }

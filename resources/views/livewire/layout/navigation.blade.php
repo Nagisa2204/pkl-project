@@ -19,7 +19,7 @@ new class extends Component
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
+        <div class="flex justify-between items-center h-16">
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
@@ -27,13 +27,45 @@ new class extends Component
                         <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                     </a>
                 </div>
+            </div>
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                </div>
+            <!-- Central Pill Navigation -->
+            <div class="inline-flex items-center h-fit bg-white rounded-full border border-gray-200 p-1 text-sm font-semibold">
+                <!-- Beranda -->
+                <a href="{{ route('dashboard') }}" wire:navigate
+                    class="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-150
+                    {{ request()->routeIs('dashboard')
+                    ? '!bg-black !text-white'
+                    : 'text-gray-700 hover:text-black hover:bg-gray-100' }}">
+
+                    <!-- Home Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="currentColor" 
+                        class="w-4 h-4 {{ request()->routeIs('dashboard') ? '!text-white' : 'text-gray-700' }}">
+                        <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.69Z" />
+                        <path d="M12 5.432 4.879 12.552A.75.75 0 0 0 4.5 13.082v6.918c0 1.243 1.007 2.25 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.918a.75.75 0 0 0-.379-.53L12 5.432Z" />
+                    </svg>
+                    <span class="{{ request()->routeIs('dashboard') ? '!text-white' : '' }}">Beranda</span>
+                </a>
+
+                <!-- Katalog -->
+                <a href="{{ route('catalog') }}" wire:navigate
+                    class="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-150
+                    {{ request()->routeIs('catalog')
+                    ? '!bg-black !text-white'
+                    : 'text-gray-700 hover:text-black hover:bg-gray-100' }}">
+
+                        <!-- Storefront Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="currentColor" 
+                        class="w-4 h-4 {{ request()->routeIs('catalog') ? '!text-white' : 'text-gray-700' }}">
+                        <path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.25a.75.75 0 0 0 .734-.6l1.5-7.5a.75.75 0 0 0-.734-.9H5.532l-.464-1.74A1.875 1.875 0 0 0 3.636 2.25H2.25Z" />
+                        <path d="M3.75 4.5a.75.75 0 0 1 .75-.75h15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-.75.75h-15a.75.75 0 0 1-.75-.75V4.5Z" />
+                    </svg>
+                    <span class="{{ request()->routeIs('catalog') ? '!text-white' : '' }}">Katalog</span>
+                </a>
             </div>
 
             <!-- Settings Dropdown -->
@@ -83,6 +115,9 @@ new class extends Component
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('catalog')" :active="request()->routeIs('catalog')" wire:navigate>
+                {{ __('Katalog') }}
             </x-responsive-nav-link>
         </div>
 
