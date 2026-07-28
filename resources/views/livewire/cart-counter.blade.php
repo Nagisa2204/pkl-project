@@ -1,3 +1,3 @@
-<div>
-    {{-- If your happiness depends on money, you will never be happy with yourself. --}}
-</div>
+<span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-black bg-white rounded-full border border-gray-200">
+    {{ $count }}
+</span>

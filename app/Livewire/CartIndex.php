@@ -2,60 +2,63 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Cart;
 use App\Models\CartItem;
-use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class CartIndex extends Component
 {
-    public function getCartProperty()
+    public function getCartProperty(): ?Cart
     {
-        return Cart::with('cartItems.product.images')->where('user_id', Auth::id())->first();
+        return Cart::with('cartItems.product.images', 'cartItems.product.category')->where('user_id', Auth::id())->first();
     }
 
-    public function incrementQuantity($itemId)
+    public function incrementQuantity(int $itemId): void
     {
         DB::transaction(function () use ($itemId) {
             $cartItem = CartItem::findOrFail($itemId);
             
-            $product = Product::lockForUpdate()->findOrFail($cartItem->product_id);
+            $product = $cartItem->product()->lockForUpdate()->first();
 
-            if ($cartItem->quantity < $product->stock_quantity) {
-                $cartItem->increment('quantity', 1);
-            } else {
-                $this->dispatch('alert', ['type' => 'warning', 'message' => 'Product is out of stock']);
+            if ($cartItem->quantity >= $product->stock_quantity) {
+                $this->dispatch('alert', type: 'warning', message: 'Product is out of stock');
+                return;
             }
+            $cartItem->increment('quantity');
         });
 
         $this->dispatch('cartUpdated');
     }
     
-    public function decrementQuantity($itemId)
+    public function decrementQuantity(int $itemId): void
     {
         $cartItem = CartItem::findOrFail($itemId);
 
-        if ($cartItem->quantity > 1) {
-            $cartItem->decrement('quantity', 1);
+        if ($cartItem->quantity <= 1) {
+            return;
         }
+
+        $cartItem->decrement('quantity');
+
         $this->dispatch('cartUpdated');
     }
 
-    public function removeItem($itemId)
-    {
-        $cartItem = CartItem::findOrFail($itemId);
-        $cartItem->delete();
 
-        $this->dispatch('alert', ['type' => 'info', 'message' => 'Produk berhasil dihapus.']);
+    public function removeItem(int $itemId): void
+    {
+        CartItem::findOrFail($itemId)->delete();
+
+        $this->dispatch('alert', type: 'success', message: 'Product removed from cart');
+
         $this->dispatch('cartUpdated');
     }
 
     public function render()
     {
         return view('livewire.cart-index', [
-            'cart' => $this->cart
+            'cart' => $this->cart,
         ]);
     }
 }
