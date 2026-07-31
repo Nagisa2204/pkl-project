@@ -1,18 +1,20 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Admin;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Product;
 use App\Models\Category;
 
+#[Layout('layouts.admin')]
 class AdminProduct extends Component
 {
     use WithPagination;
 
     public $search = '';
-    public $selectedCategory_id = '';
+    public $selectedCategory = '';
 
     protected $paginationTheme = 'tailwind';
 
@@ -21,7 +23,7 @@ class AdminProduct extends Component
         $this->resetPage();
     }
 
-    public function updatingSelectedCategory_id()
+    public function updatingSelectedCategory()
     {
         $this->resetPage();
     }
@@ -52,7 +54,7 @@ class AdminProduct extends Component
             $products->where('category_id', $this->selectedCategory);
         }
 
-        return view('livewire.admin-product', [
+        return view('livewire.admin.admin-product', [
             'products' => $products->latest()->paginate(10),
             'categories' => Category::all(),
         ]);

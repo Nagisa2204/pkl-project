@@ -12,7 +12,7 @@ class CartCounter extends Component
     public function render()
     {
         $count = Auth::check()
-            ? Auth::user()->cart?->items()->sum('quantity') ?? 0
+            ? Auth::user()->cart?->cartItems()->sum('quantity') ?? 0
             : 0;
 
         return view('livewire.cart-counter', compact('count'));

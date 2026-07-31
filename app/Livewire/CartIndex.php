@@ -10,9 +10,68 @@ use Livewire\Component;
 
 class CartIndex extends Component
 {
+    public array $selectedItems = [];
+    public ?int $selectedCategoryId = null;
+    public int $grandTotal = 0;
+    public int $totalItems = 0;
+
+    public function mount()
+    {
+        $this->calculateTotals();
+    }
+
     public function getCartProperty(): ?Cart
     {
-        return Cart::with('cartItems.product.images', 'cartItems.product.category')->where('user_id', Auth::id())->first();
+        return Cart::with('cartItems.product.images', 'cartItems.product.category')
+            ->where('user_id', Auth::id())
+            ->first();
+    }
+
+    // Fungsi ini dipanggil otomatis oleh Livewire saat checkbox dicentang/dihapus
+    public function updatedSelectedItems()
+    {
+        $this->calculateTotals();
+    }
+
+    public function calculateTotals()
+    {
+        $this->grandTotal = 0;
+        $this->totalItems = 0;
+        $this->selectedCategoryId = null;
+
+        if (empty($this->selectedItems)) {
+            // Kosongkan session jika tidak ada yang dicentang
+            session()->put('selected_cart_items', []);
+            return;
+        }
+
+        $cart = $this->cart;
+        if (!$cart) return;
+
+        // Ambil data item keranjang yang ID-nya ada di array selectedItems
+        $selectedCartItems = $cart->cartItems->whereIn('id', $this->selectedItems);
+
+        if ($selectedCartItems->isNotEmpty()) {
+            // Set kategori aktif berdasarkan item pertama yang dicentang
+            $this->selectedCategoryId = $selectedCartItems->first()->product->category_id;
+
+            // Validasi ulang: pastikan hanya menghitung item dengan kategori yang sama
+            $validItems = $selectedCartItems->where('product.category_id', $this->selectedCategoryId);
+            
+            // Perbarui array selectedItems hanya dengan item yang valid (berjaga-jaga)
+            $this->selectedItems = $validItems->pluck('id')->map(fn($id) => (string) $id)->toArray();
+
+            // Hitung total harga dan total kuantitas
+            foreach ($validItems as $item) {
+                $this->grandTotal += $item->product->price * $item->quantity;
+                $this->totalItems += $item->quantity;
+            }
+            
+            // Simpan ke session agar bisa diproses di halaman Checkout nanti
+            session()->put('selected_cart_items', $this->selectedItems);
+        } else {
+            session()->put('selected_cart_items', []);
+        }
     }
 
     public function incrementQuantity(int $itemId): void
@@ -30,6 +89,8 @@ class CartIndex extends Component
         });
 
         $this->dispatch('cartUpdated');
+        // Panggil ulang perhitungan karena kuantitas berubah
+        $this->calculateTotals(); 
     }
     
     public function decrementQuantity(int $itemId): void
@@ -43,16 +104,21 @@ class CartIndex extends Component
         $cartItem->decrement('quantity');
 
         $this->dispatch('cartUpdated');
+        $this->calculateTotals();
     }
-
 
     public function removeItem(int $itemId): void
     {
         CartItem::findOrFail($itemId)->delete();
 
-        $this->dispatch('alert', type: 'success', message: 'Product removed from cart');
+        // Hapus juga dari selectedItems jika item tersebut sedang dicentang
+        if (($key = array_search($itemId, $this->selectedItems)) !== false) {
+            unset($this->selectedItems[$key]);
+        }
 
+        $this->dispatch('alert', type: 'success', message: 'Product removed from cart');
         $this->dispatch('cartUpdated');
+        $this->calculateTotals();
     }
 
     public function render()

@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Admin;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Order;
 
+#[Layout('layouts.admin')]
 class AdminOrderDetail extends Component
 {
     public $invoice_no;
@@ -36,7 +38,7 @@ class AdminOrderDetail extends Component
 
     public function render()
     {
-        return view('livewire.admin-order-detail', [
+        return view('livewire.admin.admin-order-detail', [
             'order' => $this->order
         ]);
     }

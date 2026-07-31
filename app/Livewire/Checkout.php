@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ class Checkout extends Component
     public $buyer_name;
     public $buyer_whatsapp;
     public $shipping_address_id;
+    public $selected_cart_items = []; // Variabel untuk menampung ID item dari session
 
     protected function rules(): array
     {
@@ -34,6 +36,16 @@ class Checkout extends Component
             return;
         }
 
+        // Ambil data item yang dicentang dari session
+        $this->selected_cart_items = session()->get('selected_cart_items', []);
+
+        // Cegah akses ke halaman checkout jika tidak ada item yang dipilih
+        if (empty($this->selected_cart_items)) {
+            $this->dispatch('alert', type: 'warning', message: 'Tidak ada produk yang dipilih untuk dicheckout.');
+            $this->redirectRoute('cart.index');
+            return;
+        }
+
         $address = $user->userAddresses()->first();
 
         $this->buyer_name = $user->name;
@@ -43,7 +55,11 @@ class Checkout extends Component
 
     public function getCartProperty(): ?Cart
     {
-        return Cart::with('cartItems.product')->where('user_id', Auth::id())->first();}
+        // Hanya muat cart items yang ID-nya ada di dalam session selected_cart_items
+        return Cart::with(['cartItems' => function ($query) {
+            $query->whereIn('id', $this->selected_cart_items)->with('product');
+        }])->where('user_id', Auth::id())->first();
+    }
 
     public function placeOrder()
     {
@@ -58,7 +74,7 @@ class Checkout extends Component
         $cart = $this->cart;
 
         if (!$cart || $cart->cartItems->isEmpty()) {
-            $this->dispatch('alert', type: 'warning', message: 'Cart is empty');
+            $this->dispatch('alert', type: 'warning', message: 'Cart is empty or no items selected');
             return;
         }
 
@@ -114,7 +130,13 @@ class Checkout extends Component
             ]);
 
             $order->items()->createMany($orderItems);
-            $cart->delete();
+            
+            // HAPUS HANYA ITEM YANG DIBELI DARI KERANJANG
+            CartItem::whereIn('id', $this->selected_cart_items)->delete();
+
+            // Bersihkan session setelah berhasil checkout
+            session()->forget('selected_cart_items');
+
             return $order;
         });
 

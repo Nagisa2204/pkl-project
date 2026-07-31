@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Admin;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Order;
 
+#[Layout('layouts.admin')]
 class AdminOrderHistory extends Component
 {
     use WithPagination;
@@ -37,7 +39,7 @@ class AdminOrderHistory extends Component
                     });
             });
         }
-        return view('livewire.admin-order-history', [
+        return view('livewire.admin.admin-order-history', [
             'orders' => $orders->latest()->paginate(10)
         ]);
     }

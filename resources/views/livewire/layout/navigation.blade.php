@@ -23,14 +23,14 @@ new class extends Component
             
             <!-- LOGO -->
             <div class="flex items-center gap-3">
-                <a href="{{ route('home') }}" wire:navigate class="flex items-center gap-2">
+                <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2">
                     <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                 </a>
             </div>
 
             <!-- CENTRAL PILL NAVIGATION -->
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all">
-                <a href="{{ route('home') }}" wire:navigate
+                <a href="{{ route('dashboard') }}" wire:navigate
                     class="flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-150
                     {{ request()->routeIs('home')
                     ? '!bg-black !text-white'
@@ -78,7 +78,7 @@ new class extends Component
                 @endauth
 
                 @can('admin')
-                    <a href="{{ route('admin.dashboard') }}" wire:navigate
+                    <a href="{{ route('admin.home') }}" wire:navigate
                         class="flex items-center gap-2 px-4 py-1.5 rounded-full text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all duration-150 border border-indigo-200">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-indigo-700">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
@@ -151,7 +151,7 @@ new class extends Component
 
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1 border-t border-gray-100">
-            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')" wire:navigate>
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Beranda') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('product.index')" :active="request()->routeIs('catalog.*')" wire:navigate>
@@ -165,7 +165,7 @@ new class extends Component
             @endauth
 
             @can('admin')
-                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')" wire:navigate>
+                <x-responsive-nav-link :href="route('admin.home')" :active="request()->routeIs('admin.*')" wire:navigate>
                     {{ __('Grafik (Admin)') }}
                 </x-responsive-nav-link>
             @endcan
