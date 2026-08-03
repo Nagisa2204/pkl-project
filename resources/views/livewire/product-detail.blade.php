@@ -1,9 +1,5 @@
 <div style="max-width: 1100px; margin: 40px auto; padding: 0 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9fafb; min-height: 100vh; padding-top: 40px;">
-    
-    <!-- Kartu Utama -->
     <div style="display: flex; flex-wrap: wrap; background: #ffffff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden;">
-        
-        <!-- KOLOM KIRI: GAMBAR PRODUK -->
         <div style="flex: 1; min-width: 350px; background-color: #e0f2fe; padding: 20px; display: flex; align-items: center; justify-content: center;">
             @if($product->images && $product->images->count() > 0)
                 <img src="{{ asset('storage/' . $product->images->first()->image_path) }}" 
@@ -16,10 +12,7 @@
             @endif
         </div>
 
-        <!-- KOLOM KANAN: DETAIL PRODUK -->
         <div style="flex: 1; min-width: 350px; padding: 40px;">
-            
-            <!-- Badges / Tags -->
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <span style="background: #eef2ff; color: #4f46e5; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
@@ -30,43 +23,35 @@
                 </span>
             </div>
 
-            <!-- Nama Produk -->
             <h1 style="margin: 0 0 10px 0; font-size: 32px; font-weight: 800; color: #0f172a; line-height: 1.2;">
                 {{ $product->name }}
             </h1>
 
-            <!-- Harga -->
             <div style="font-size: 32px; font-weight: 800; color: #4f46e5; margin-bottom: 25px;">
                 Rp {{ number_format($product->price, 0, ',', '.') }}
             </div>
 
-            <!-- Kotak Info (Grid 2x2) - Kondisi diubah menjadi Stok -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
-                <!-- Box Stok -->
                 <div style="background: #f8fafc; padding: 15px; border-radius: 12px;">
                     <div style="color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">Stok Tersedia</div>
                     <div style="color: {{ $product->stock_quantity > 0 ? '#0f172a' : '#dc2626' }}; font-size: 14px; font-weight: 700;">
                         {{ $product->stock_quantity > 0 ? $product->stock_quantity . ' pcs' : 'Habis' }}
                     </div>
                 </div>
-                <!-- Box Berat Produk -->
                 <div style="background: #f8fafc; padding: 15px; border-radius: 12px;">
                     <div style="color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">Berat Produk</div>
                     <div style="color: #0f172a; font-size: 14px; font-weight: 700;">{{ $product->weight_grams ?? 0 }} Gram</div>
                 </div>
-                <!-- Box Min. Pembelian -->
                 <div style="background: #f8fafc; padding: 15px; border-radius: 12px;">
                     <div style="color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">Min. Pembelian</div>
                     <div style="color: #0f172a; font-size: 14px; font-weight: 700;">1 Item</div>
                 </div>
-                <!-- Box SKU -->
                 <div style="background: #f8fafc; padding: 15px; border-radius: 12px;">
                     <div style="color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">SKU</div>
                     <div style="color: #0f172a; font-size: 14px; font-weight: 700;">{{ $product->sku ?? '-' }}</div>
                 </div>
             </div>
 
-            <!-- Box Deskripsi Produk -->
             <div style="background: #f8fafc; border: 1px solid #f1f5f9; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
                 <h3 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700; color: #334155;">Deskripsi Produk</h3>
                 <div style="line-height: 1.7; color: #64748b; font-size: 14px;">
@@ -74,7 +59,6 @@
                 </div>
             </div>
 
-            <!-- Tombol Tambah ke Keranjang -->
             <button 
                 wire:click="addToCart" 
                 @if($product->stock_quantity <= 0) disabled @endif

@@ -1,11 +1,5 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">        
-    <div x-data="{ show: false, message: '', type: 'success' }" 
-        x-on:alert.window="show = true; message = $event.detail.message; type = $event.detail.type; setTimeout(() => show = false, 3000)"
-        x-show="show" 
-        x-transition
-        x-cloak
-        class="fixed bottom-5 right-5 z-50 p-4 rounded-2xl shadow-xl text-white font-medium text-sm flex items-center gap-2"
-        :class="type === 'warning' ? 'bg-amber-500' : (type === 'error' ? 'bg-rose-600' : 'bg-emerald-600')">
+    <div x-data="{ show: false, message: '', type: 'success' }" x-on:alert.window="show = true; message = $event.detail.message; type = $event.detail.type; setTimeout(() => show = false, 3000)" x-show="show" x-transition x-cloak class="fixed bottom-5 right-5 z-50 p-4 rounded-2xl shadow-xl text-white font-medium text-sm flex items-center gap-2" :class="type === 'warning' ? 'bg-amber-500' : (type === 'error' ? 'bg-rose-600' : 'bg-emerald-600')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
         </svg>
@@ -15,7 +9,6 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Katalog Produk</h1>
-            <p class="text-sm text-gray-500">Temukan berbagai produk berkualitas yang Anda butuhkan</p>
         </div>
 
         <div class="relative w-full md:w-80">
@@ -83,7 +76,7 @@
                 <div class="p-4 pt-0">
                     <button wire:click="addToCart({{ $product->id }})" 
                         wire:loading.attr="disabled"
-                        class="w-full py-2 px-3 bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-full font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                        style="background: #f8fafc; padding: 8px; border-radius: 8px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; color: #0f172a; border: 1px solid #e2e8f0; cursor: {{ $product->stock_quantity > 0 ? 'pointer' : 'not-allowed' }};">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>

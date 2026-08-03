@@ -16,7 +16,6 @@ class AdminManageAccount extends Component
 
     public $search = '';
     
-    // Variabel Data Form
     public $userId;
     public $name;
     public $email;
@@ -24,7 +23,6 @@ class AdminManageAccount extends Component
     public $role = 'user';
     public $is_active = true;
     
-    // Variabel State Modal
     public $isModalOpen = false;
     public $isEditMode = false;
 
@@ -49,8 +47,8 @@ class AdminManageAccount extends Component
         $this->userId = $user->id;
         $this->name = $user->name;
         $this->email = $user->email;
-        $this->role = $user->role; // Ambil role[cite: 8]
-        $this->is_active = (bool) $user->is_active; // Ambil status aktif[cite: 8]
+        $this->role = $user->role;
+        $this->is_active = (bool) $user->is_active;
         
         $this->isEditMode = true;
         $this->isModalOpen = true;
@@ -98,7 +96,6 @@ class AdminManageAccount extends Component
         $this->closeModal();
     }
 
-    // Fitur Quick Toggle untuk mengubah is_active langsung dari tabel
     public function toggleActive($id)
     {
         $user = User::findOrFail($id);

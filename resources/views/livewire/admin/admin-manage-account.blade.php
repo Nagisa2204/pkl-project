@@ -1,125 +1,161 @@
-<div>
-    <h2>Kelola Akun Pengguna</h2>
-    
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-800">Kelola Akun Pengguna</h1>
+
     @if(session()->has('success'))
-        <div style="color: green; margin-bottom: 15px; padding: 10px; background-color: #e6ffed; border: 1px solid #b7ebc6; border-radius: 5px;">
+        <div class="rounded-lg bg-green-100 p-4 text-green-700 border border-green-200">
             {{ session('success') }}
         </div>
     @endif
 
-    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-        <input type="text" wire:model.live="search" placeholder="Cari nama atau email..." style="padding: 8px; width: 250px;">
-        <button wire:click="create" style="padding: 8px 15px; cursor: pointer;">Tambah Pengguna</button>
+    <div class="flex items-center justify-between gap-4">
+        <input type="text" wire:model.live="search" placeholder="Cari nama atau email..." class="w-64 rounded-lg border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none">
+        
+        <button wire:click="create" class="rounded-xl border border-emerald-600 bg-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-400 transition">
+            Tambah Pengguna
+        </button>
     </div>
 
-    <!-- AREA MODAL FORM (MELAYANG DI TENGAH) -->
     @if($isModalOpen)
-        <!-- Overlay Gelap di Background -->
-        <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
-            
-            <!-- Kotak Bubble Putih Form -->
-            <div style="background-color: white; padding: 25px; border-radius: 8px; width: 450px; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+                <h3 class="mb-4 border-b border-gray-200 pb-3 text-lg font-bold text-gray-800">
                     {{ $isEditMode ? 'Edit Pengguna' : 'Tambah Pengguna Baru' }}
                 </h3>
                 
                 <form wire:submit.prevent="store">
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Nama Lengkap:</label>
-                        <input type="text" wire:model="name" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
-                        @error('name') <span style="color: red; font-size: 12px; display: block; margin-top: 4px;">{{ $message }}</span> @enderror
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email:</label>
-                        <input type="email" wire:model="email" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
-                        @error('email') <span style="color: red; font-size: 12px; display: block; margin-top: 4px;">{{ $message }}</span> @enderror
-                    </div>
+                    <table class="w-full border-separate border-spacing-y-3">
+                        <tbody>
+                            <tr>
+                                <td class="w-1/3 align-top pt-2">
+                                    <label class="block text-sm font-bold text-gray-700">Nama Lengkap</label>
+                                </td>
+                                <td class="w-2/3 align-top">
+                                    <input type="text" wire:model="name" class="w-full rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none">
+                                    @error('name') 
+                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                    @enderror
+                                </td>
+                            </tr>
 
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Password:</label>
-                        <input type="password" wire:model="password" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
-                        @if($isEditMode)
-                            <small style="color: gray; display: block; margin-top: 5px;">Kosongkan jika tidak ingin mengubah password lama.</small>
-                        @endif
-                        @error('password') <span style="color: red; font-size: 12px; display: block; margin-top: 4px;">{{ $message }}</span> @enderror
-                    </div>
+                            <tr>
+                                <td class="align-top pt-2">
+                                    <label class="block text-sm font-bold text-gray-700">Email</label>
+                                </td>
+                                <td class="align-top">
+                                    <input type="email" wire:model="email" class="w-full rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none">
+                                    @error('email') 
+                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                    @enderror
+                                </td>
+                            </tr>
 
-                    <!-- Input Role -->
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Role:</label>
-                        <select wire:model="role" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                        @error('role') <span style="color: red; font-size: 12px; display: block; margin-top: 4px;">{{ $message }}</span> @enderror
-                    </div>
+                            <tr>
+                                <td class="align-top pt-2">
+                                    <label class="block text-sm font-bold text-gray-700">Password</label>
+                                </td>
+                                <td class="align-top">
+                                    <input type="password" wire:model="password" class="w-full rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none">
+                                    @if($isEditMode)
+                                        <small class="mt-1 block text-xs text-gray-500">Kosongkan jika tidak ingin mengubah password lama.</small>
+                                    @endif
+                                    @error('password') 
+                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                    @enderror
+                                </td>
+                            </tr>
 
-                    <!-- Input Status Aktif -->
-                    <div style="margin-bottom: 25px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" wire:model="is_active" style="width: 16px; height: 16px;">
-                            <span>Akun Aktif (Bisa Login)</span>
-                        </label>
-                        @error('is_active') <span style="color: red; font-size: 12px; display: block; margin-top: 4px;">{{ $message }}</span> @enderror
-                    </div>
+                            <tr>
+                                <td class="align-top pt-2">
+                                    <label class="block text-sm font-bold text-gray-700">Role</label>
+                                </td>
+                                <td class="align-top">
+                                    <select wire:model="role" class="w-full rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none bg-white">
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                    @error('role') 
+                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                    @enderror
+                                </td>
+                            </tr>
 
-                    <!-- Tombol Aksi -->
-                    <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; padding-top: 15px;">
-                        <button type="button" wire:click="closeModal" style="padding: 8px 15px; cursor: pointer; background-color: #f1f1f1; border: 1px solid #ccc; border-radius: 4px;">Batal</button>
-                        <button type="submit" style="padding: 8px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px;">Simpan</button>
+                            <tr>
+                                <td></td>
+                                <td class="align-top">
+                                    <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+                                        <input type="checkbox" wire:model="is_active" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span>Akun Aktif (Bisa Login)</span>
+                                    </label>
+                                    @error('is_active') 
+                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                    @enderror
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="flex justify-end gap-2 border-t border-gray-200 pt-4 mt-4">
+                        <button type="button" wire:click="closeModal" class="rounded border border-gray-300 bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition">
+                            Batal
+                        </button>
+                        <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition">
+                            Simpan
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     @endif
 
-    <!-- TABEL DATA -->
-    <table border="1" width="100%" style="border-collapse: collapse; text-align: left; background-color: white;">
-        <thead style="background-color: #f8f9fa;">
-            <tr>
-                <th style="padding: 12px 8px; border-bottom: 2px solid #dee2e6;">Nama</th>
-                <th style="padding: 12px 8px; border-bottom: 2px solid #dee2e6;">Email</th>
-                <th style="padding: 12px 8px; border-bottom: 2px solid #dee2e6;">Role</th>
-                <th style="padding: 12px 8px; border-bottom: 2px solid #dee2e6;">Status</th>
-                <th style="padding: 12px 8px; border-bottom: 2px solid #dee2e6;">Bergabung</th>
-                <th style="padding: 12px 8px; border-bottom: 2px solid #dee2e6;">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($users as $user)
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px 8px;">{{ $user->name }}</td>
-                    <td style="padding: 10px 8px;">{{ $user->email }}</td>
-                    <td style="padding: 10px 8px;">{{ ucfirst($user->role) }}</td>
-                    <td style="padding: 10px 8px;">
-                        @if($user->is_active)
-                            <span style="color: white; background: #28a745; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">Aktif</span>
-                        @else
-                            <span style="color: white; background: #dc3545; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">Nonaktif</span>
-                        @endif
-                        
-                        <button style="margin-left: 8px; font-size: 11px; padding: 2px 6px; cursor: pointer;" wire:click="toggleActive({{ $user->id }})">
-                            {{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                        </button>
-                    </td>
-                    <td style="padding: 10px 8px;">{{ $user->created_at->format('d M Y') }}</td>
-                    <td style="padding: 10px 8px;">
-                        <button wire:click="edit({{ $user->id }})" style="padding: 4px 8px; cursor: pointer; margin-right: 5px;">Edit</button>
-                        <button wire:click="deleteUser({{ $user->id }})" wire:confirm="Yakin ingin menghapus pengguna ini?" style="padding: 4px 8px; cursor: pointer; color: white; background: #dc3545; border: none; border-radius: 3px;">
-                            Hapus
-                        </button>
-                    </td>
-                </tr>
-            @empty
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <table class="w-full border-collapse text-center bg-white">
+            <thead class="bg-gray-50">
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 20px;">Tidak ada data pengguna.</td>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Nama</th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Email</th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Role</th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Status</th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Bergabung</th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Aksi</th>
                 </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse($users as $user)
+                    <tr class="border-b border-gray-200 hover:bg-gray-50/50">
+                        <td class="py-2.5 px-2 text-gray-800">{{ $user->name }}</td>
+                        <td class="py-2.5 px-2 text-gray-800">{{ $user->email }}</td>
+                        <td class="py-2.5 px-2 text-gray-800">{{ ucfirst($user->role) }}</td>
+                        <td class="py-2.5 px-2">
+                            @if($user->is_active)
+                                <span class="rounded-full bg-green-600 px-2 py-0.5 text-xs font-bold text-white">Aktif</span>
+                            @else
+                                <span class="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">Nonaktif</span>
+                            @endif
+                        
+                            <button class="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-bold text-gray-600 hover:bg-gray-100" wire:click="toggleActive({{ $user->id }})">
+                                {{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                            </button>
+                        </td>
+                        <td class="py-2.5 px-2 text-gray-800">{{ $user->created_at->format('d M Y') }}</td>
+                        <td class="py-2.5 px-2 space-x-1">
+                            <button wire:click="edit({{ $user->id }})" class="rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-700 transition">
+                                Edit
+                            </button>
+                            <button wire:click="deleteUser({{ $user->id }})" wire:confirm="Yakin ingin menghapus pengguna ini?" class="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 transition">
+                                Hapus
+                            </button>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="p-5 text-center text-gray-500">Tidak ada data pengguna.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
     
-    <div style="margin-top: 15px;">
+    <div class="mt-4">
         {{ $users->links() }}
     </div>
 </div>

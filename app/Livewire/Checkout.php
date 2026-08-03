@@ -6,23 +6,41 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class Checkout extends Component
 {
     public $buyer_name;
     public $buyer_whatsapp;
     public $shipping_address_id;
-    public $selected_cart_items = []; // Variabel untuk menampung ID item dari session
+    public $selected_cart_items = [];
+    
+    public $has_address = false;
+
+    public $selected_bank = '';
+
+    public $destination_city_id;
+    public $total_weight = 0;
+    public $courier = '';
+    public $services = []; 
+    public $shipping_service = ''; 
+    public $shipping_cost = 0;
 
     protected function rules(): array
     {
         return [
             'buyer_name' => ['required', 'string', 'max:255'],
             'buyer_whatsapp' => ['required', 'string', 'max:255'],
+            'selected_bank' => ['required', 'string'],
+            'courier' => ['required', 'string'],
+            'shipping_service' => ['required', 'string'],
         ];
     }
 
@@ -30,71 +48,115 @@ class Checkout extends Component
     {
         $user = Auth::user();
 
-        if ($user->userAddresses()->doesntExist()) {
-            $this->dispatch('alert', type: 'warning', message: 'Please add your shipping address first.');
-            $this->redirectRoute('profile.show');
-            return;
-        }
-
-        // Ambil data item yang dicentang dari session
         $this->selected_cart_items = session()->get('selected_cart_items', []);
 
-        // Cegah akses ke halaman checkout jika tidak ada item yang dipilih
         if (empty($this->selected_cart_items)) {
             $this->dispatch('alert', type: 'warning', message: 'Tidak ada produk yang dipilih untuk dicheckout.');
             $this->redirectRoute('cart.index');
             return;
         }
 
-        $address = $user->userAddresses()->first();
-
         $this->buyer_name = $user->name;
         $this->buyer_whatsapp = $user->phone;
-        $this->shipping_address_id = $address->id;
+
+        $address = $user->userAddresses()->first();
+        
+        if ($address) {
+            $this->has_address = true;
+            $this->shipping_address_id = $address->id;
+            $this->destination_city_id = $address->city_id;
+        } else {
+            $this->has_address = false;
+        }
+
+        $this->calculateTotalWeight();
     }
 
     public function getCartProperty(): ?Cart
     {
-        // Hanya muat cart items yang ID-nya ada di dalam session selected_cart_items
         return Cart::with(['cartItems' => function ($query) {
             $query->whereIn('id', $this->selected_cart_items)->with('product');
         }])->where('user_id', Auth::id())->first();
     }
 
+    public function calculateTotalWeight()
+    {
+        $cart = $this->cart;
+        if ($cart && $cart->cartItems) {
+            $this->total_weight = $cart->cartItems->sum(function ($item) {
+                $weight = $item->product->weight_grams ?? 1000; 
+                return $weight * $item->quantity;
+            });
+        }
+    }
+
+    public function updatedCourier($value)
+    {
+        $this->shipping_cost = 0;
+        $this->shipping_service = '';
+        $this->services = [];
+
+        if (!$value || !$this->destination_city_id) return;
+
+        $response = Http::withHeaders([
+            'key' => env('RAJAONGKIR_API_KEY')
+        ])->post('https://api.rajaongkir.com/starter/cost', [
+            'origin' => env('RAJAONGKIR_ORIGIN_CITY_ID'),
+            'destination' => $this->destination_city_id,
+            'weight' => $this->total_weight > 0 ? $this->total_weight : 1000,
+            'courier' => $value
+        ]);
+
+        if ($response->successful()) {
+            $this->services = $response['rajaongkir']['results'][0]['costs'] ?? [];
+        } else {
+            $this->dispatch('alert', type: 'error', message: 'Gagal mengambil data ongkos kirim.');
+        }
+    }
+
+    public function updatedShippingService($value)
+    {
+        $selectedService = collect($this->services)->firstWhere('service', $value);
+        if ($selectedService) {
+            $this->shipping_cost = $selectedService['cost'][0]['value'];
+        }
+    }
+
     public function placeOrder()
     {
-        $this->validate();
-        $user = Auth::user();
-
-        if ($user->userAddresses()->doesntExist()) {
-            $this->dispatch('alert', type: 'error', message: 'Shipping address not found');
+        if (!$this->has_address) {
+            $this->dispatch('alert', type: 'error', message: 'Silakan isi alamat pengiriman terlebih dahulu!');
             return;
         }
 
+        if (empty($this->selected_bank)) {
+            $this->dispatch('alert', type: 'error', message: 'Silakan pilih metode pembayaran.');
+            return;
+        }
+
+        if ($this->shipping_cost <= 0) {
+            $this->dispatch('alert', type: 'error', message: 'Silakan pilih layanan pengiriman.');
+            return;
+        }
+
+        $this->validate();
+        
+        $user = Auth::user();
         $cart = $this->cart;
 
-        if (!$cart || $cart->cartItems->isEmpty()) {
-            $this->dispatch('alert', type: 'warning', message: 'Cart is empty or no items selected');
-            return;
-        }
-
         $order = DB::transaction(function () use ($cart, $user) {
-
+            
             $subtotal = 0;
             $orderItems = [];
 
             foreach ($cart->cartItems as $item) {
-
                 $product = Product::lockForUpdate()->findOrFail($item->product_id);
 
                 if ($product->stock_quantity < $item->quantity) {
                     throw new \Exception("Produk {$product->name} out of stock");
                 }
 
-                $product->decrement(
-                    'stock_quantity',
-                    $item->quantity
-                );
+                $product->decrement('stock_quantity', $item->quantity);
 
                 $lineSubtotal = $item->price * $item->quantity;
                 $subtotal += $lineSubtotal;
@@ -111,18 +173,19 @@ class Checkout extends Component
                 ];
             }
 
-            $shippingCost = 0;
+            $invoiceNo = 'INV-' . date('Ymd') . '-' . Str::random(6);
+            $grandTotal = $subtotal + $this->shipping_cost;
 
             $order = Order::create([
                 'user_id' => $user->id,
-                'invoice_no' => 'INV-' . date('Ymd') . '-' . Str::random(6),
+                'invoice_no' => $invoiceNo,
                 'buyer_name' => $this->buyer_name,
                 'buyer_email' => $user->email,
                 'buyer_whatsapp' => $this->buyer_whatsapp,
                 'shipping_address_id' => $this->shipping_address_id,
                 'subtotal' => $subtotal,
-                'shipping_cost' => $shippingCost,
-                'total' => $subtotal + $shippingCost,
+                'shipping_cost' => $this->shipping_cost, 
+                'total' => $grandTotal,
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
                 'delivery_status' => 'pending',
@@ -130,18 +193,47 @@ class Checkout extends Component
             ]);
 
             $order->items()->createMany($orderItems);
-            
-            // HAPUS HANYA ITEM YANG DIBELI DARI KERANJANG
             CartItem::whereIn('id', $this->selected_cart_items)->delete();
-
-            // Bersihkan session setelah berhasil checkout
             session()->forget('selected_cart_items');
+            
+            Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+            Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+            Config::$isSanitized = true;
+            Config::$is3ds = true;
+
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $order->invoice_no, 
+                    'gross_amount' => $order->total,
+                ],
+                'customer_details' => [
+                    'first_name' => $order->buyer_name,
+                    'email' => $order->buyer_email,
+                    'phone' => $order->buyer_whatsapp,
+                ],
+            ];
+
+            if ($this->selected_bank !== 'all') {
+                $params['enabled_payments'] = [$this->selected_bank];
+            }
+
+            $snapToken = Snap::getSnapToken($params);
+            
+            Payment::create([
+                'order_id' => $order->id,
+                'provider' => 'midtrans',
+                'bank' => $this->selected_bank,
+                'status' => 'pending',
+                'gross_amount' => $order->total,
+                'snap_token' => $snapToken,
+            ]);
 
             return $order;
         });
 
         $this->dispatch('cartUpdated');
-        $this->dispatch('alert', type: 'success', message: 'Order placed successfully');
+        $this->dispatch('alert', type: 'success', message: 'Pesanan berhasil dibuat!');
+        
         return redirect()->route('orders.detail', $order->invoice_no);
     }
 

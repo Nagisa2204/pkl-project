@@ -28,22 +28,9 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $categories = Category::factory(5)->create();
-
-        Product::factory()
-            ->hasImages(1, [
-                'image_path' => 'https://via.placeholder.com/150'
-            ])
-            ->create([
-                'name' => 'Test Product',
-                'category_id' => $categories->first()->id, 
-                'slug' => 'test-product',
-                'sku' => 'test-product-sku',
-                'price' => 10000000,
-                'stock_status' => 'available',
-                'stock_quantity' => 5,
-                'weight_grams' => 6000,
-                'is_active' => true,
-            ]);
+        $categories = Category::factory()->create([
+            'name' => 'Product Physical',  
+            'slug' => 'product-physical',      
+        ]);
     }
 }

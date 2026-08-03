@@ -27,7 +27,6 @@ class CartIndex extends Component
             ->first();
     }
 
-    // Fungsi ini dipanggil otomatis oleh Livewire saat checkbox dicentang/dihapus
     public function updatedSelectedItems()
     {
         $this->calculateTotals();
@@ -40,7 +39,6 @@ class CartIndex extends Component
         $this->selectedCategoryId = null;
 
         if (empty($this->selectedItems)) {
-            // Kosongkan session jika tidak ada yang dicentang
             session()->put('selected_cart_items', []);
             return;
         }
@@ -48,26 +46,20 @@ class CartIndex extends Component
         $cart = $this->cart;
         if (!$cart) return;
 
-        // Ambil data item keranjang yang ID-nya ada di array selectedItems
         $selectedCartItems = $cart->cartItems->whereIn('id', $this->selectedItems);
 
         if ($selectedCartItems->isNotEmpty()) {
-            // Set kategori aktif berdasarkan item pertama yang dicentang
             $this->selectedCategoryId = $selectedCartItems->first()->product->category_id;
 
-            // Validasi ulang: pastikan hanya menghitung item dengan kategori yang sama
             $validItems = $selectedCartItems->where('product.category_id', $this->selectedCategoryId);
             
-            // Perbarui array selectedItems hanya dengan item yang valid (berjaga-jaga)
             $this->selectedItems = $validItems->pluck('id')->map(fn($id) => (string) $id)->toArray();
 
-            // Hitung total harga dan total kuantitas
             foreach ($validItems as $item) {
                 $this->grandTotal += $item->product->price * $item->quantity;
                 $this->totalItems += $item->quantity;
             }
             
-            // Simpan ke session agar bisa diproses di halaman Checkout nanti
             session()->put('selected_cart_items', $this->selectedItems);
         } else {
             session()->put('selected_cart_items', []);
@@ -89,7 +81,6 @@ class CartIndex extends Component
         });
 
         $this->dispatch('cartUpdated');
-        // Panggil ulang perhitungan karena kuantitas berubah
         $this->calculateTotals(); 
     }
     
@@ -111,7 +102,6 @@ class CartIndex extends Component
     {
         CartItem::findOrFail($itemId)->delete();
 
-        // Hapus juga dari selectedItems jika item tersebut sedang dicentang
         if (($key = array_search($itemId, $this->selectedItems)) !== false) {
             unset($this->selectedItems[$key]);
         }

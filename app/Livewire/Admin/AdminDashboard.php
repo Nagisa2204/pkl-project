@@ -19,7 +19,6 @@ class AdminDashboard extends Component
     public array $chartLabels = [];
     public array $chartValues = [];
 
-    // Filter periode
     public string $period = '7days';
 
     public function mount()
@@ -28,17 +27,12 @@ class AdminDashboard extends Component
         $this->loadChart();
     }
 
-    /**
-     * Reload chart ketika periode berubah.
-     */
     public function updatedPeriod()
     {
         $this->loadChart();
+        $this->dispatch('chart-updated');
     }
 
-    /**
-     * Load statistik dashboard.
-     */
     private function loadStatistics()
     {
         $this->totalRevenue = (float) Order::query()
@@ -71,9 +65,6 @@ class AdminDashboard extends Component
             ->sum('order_items.quantity');
     }
 
-    /**
-     * Load data chart berdasarkan periode.
-     */
     private function loadChart()
     {
         $this->chartLabels = [];
@@ -81,11 +72,6 @@ class AdminDashboard extends Component
 
         switch ($this->period) {
 
-            /*
-            |--------------------------------------------------------------------------
-            | 7 Hari
-            |--------------------------------------------------------------------------
-            */
             case '7days':
 
                 $startDate = now()->subDays(6)->startOfDay();
@@ -117,11 +103,6 @@ class AdminDashboard extends Component
 
                 break;
 
-            /*
-            |--------------------------------------------------------------------------
-            | 1 Bulan
-            |--------------------------------------------------------------------------
-            */
             case '1month':
 
                 $startDate = now()->subDays(29)->startOfDay();
@@ -153,11 +134,6 @@ class AdminDashboard extends Component
 
                 break;
 
-            /*
-            |--------------------------------------------------------------------------
-            | 1 Tahun
-            |--------------------------------------------------------------------------
-            */
             case '1year':
 
                 $salesData = Order::query()

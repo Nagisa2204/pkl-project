@@ -17,18 +17,15 @@ new class extends Component
 }; ?>
 
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 sticky top-0 z-50">
-    <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             
-            <!-- LOGO -->
             <div class="flex items-center gap-3">
                 <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2">
                     <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                 </a>
             </div>
 
-            <!-- CENTRAL PILL NAVIGATION -->
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all">
                 <a href="{{ route('dashboard') }}" wire:navigate
                     class="flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-150
@@ -53,14 +50,6 @@ new class extends Component
                         <path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.25a.75.75 0 0 0 .734-.6l1.5-7.5a.75.75 0 0 0-.734-.9H5.532l-.464-1.74A1.875 1.875 0 0 0 3.636 2.25H2.25Z" />
                     </svg>
                     <span>Katalog</span>
-                </a>
-
-                <a href="{{ route('product.index') }}" wire:navigate
-                    class="flex items-center gap-2 px-4 py-1.5 rounded-full text-gray-700 hover:text-black hover:bg-gray-100 transition-all duration-150">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-gray-700">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6h16.5M3.75 12h16.5m-16.5 6h12" />
-                    </svg>
-                    <span>Kategori</span>
                 </a>
 
                 @auth
