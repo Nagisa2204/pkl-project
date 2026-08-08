@@ -1,5 +1,7 @@
 <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-gray-800">Kelola Akun Pengguna</h1>
+    <h1 class="text-2xl font-bold text-gray-800">
+        Kelola Akun Pengguna
+    </h1>
 
     @if(session()->has('success'))
         <div class="rounded-lg bg-green-100 p-4 text-green-700 border border-green-200">
@@ -27,54 +29,76 @@
                         <tbody>
                             <tr>
                                 <td class="w-1/3 align-top pt-2">
-                                    <label class="block text-sm font-bold text-gray-700">Nama Lengkap</label>
+                                    <label class="block text-sm font-bold text-gray-700">
+                                        Nama Lengkap
+                                    </label>
                                 </td>
                                 <td class="w-2/3 align-top">
                                     <input type="text" wire:model="name" class="w-full rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none">
                                     @error('name') 
-                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                        <span class="mt-1 block text-xs text-red-500">
+                                            {{ $message }}
+                                        </span> 
                                     @enderror
                                 </td>
                             </tr>
 
                             <tr>
                                 <td class="align-top pt-2">
-                                    <label class="block text-sm font-bold text-gray-700">Email</label>
+                                    <label class="block text-sm font-bold text-gray-700">
+                                        Email
+                                    </label>
                                 </td>
                                 <td class="align-top">
                                     <input type="email" wire:model="email" class="w-full rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none">
                                     @error('email') 
-                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                        <span class="mt-1 block text-xs text-red-500">
+                                            {{ $message }}
+                                        </span> 
                                     @enderror
                                 </td>
                             </tr>
 
                             <tr>
                                 <td class="align-top pt-2">
-                                    <label class="block text-sm font-bold text-gray-700">Password</label>
+                                    <label class="block text-sm font-bold text-gray-700">
+                                        Password
+                                    </label>
                                 </td>
                                 <td class="align-top">
                                     <input type="password" wire:model="password" class="w-full rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none">
                                     @if($isEditMode)
-                                        <small class="mt-1 block text-xs text-gray-500">Kosongkan jika tidak ingin mengubah password lama.</small>
+                                        <small class="mt-1 block text-xs text-gray-500">
+                                            Kosongkan jika tidak ingin mengubah password lama.
+                                        </small>
                                     @endif
                                     @error('password') 
-                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                        <span class="mt-1 block text-xs text-red-500">
+                                            {{ $message }}
+                                        </span> 
                                     @enderror
                                 </td>
                             </tr>
 
                             <tr>
                                 <td class="align-top pt-2">
-                                    <label class="block text-sm font-bold text-gray-700">Role</label>
+                                    <label class="block text-sm font-bold text-gray-700">
+                                        Role
+                                    </label>
                                 </td>
                                 <td class="align-top">
                                     <select wire:model="role" class="w-full rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none bg-white">
-                                        <option value="user">User</option>
-                                        <option value="admin">Admin</option>
+                                        <option value="user">
+                                            User
+                                        </option>
+                                        <option value="admin">
+                                            Admin
+                                        </option>
                                     </select>
                                     @error('role') 
-                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                        <span class="mt-1 block text-xs text-red-500">
+                                            {{ $message }}
+                                        </span> 
                                     @enderror
                                 </td>
                             </tr>
@@ -84,10 +108,14 @@
                                 <td class="align-top">
                                     <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
                                         <input type="checkbox" wire:model="is_active" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        <span>Akun Aktif (Bisa Login)</span>
+                                        <span>
+                                            Akun Aktif (Bisa Login)
+                                        </span>
                                     </label>
                                     @error('is_active') 
-                                        <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> 
+                                        <span class="mt-1 block text-xs text-red-500">
+                                            {{ $message }}
+                                        </span> 
                                     @enderror
                                 </td>
                             </tr>
@@ -111,32 +139,56 @@
         <table class="w-full border-collapse text-center bg-white">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Nama</th>
-                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Email</th>
-                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Role</th>
-                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Status</th>
-                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Bergabung</th>
-                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">Aksi</th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">
+                        Nama
+                    </th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">
+                        Email
+                    </th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">
+                        Role
+                    </th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">
+                        Status
+                    </th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">
+                        Bergabung
+                    </th>
+                    <th class="py-3 px-2 border-b-2 border-gray-200 font-semibold text-gray-700">
+                        Aksi
+                    </th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($users as $user)
                     <tr class="border-b border-gray-200 hover:bg-gray-50/50">
-                        <td class="py-2.5 px-2 text-gray-800">{{ $user->name }}</td>
-                        <td class="py-2.5 px-2 text-gray-800">{{ $user->email }}</td>
-                        <td class="py-2.5 px-2 text-gray-800">{{ ucfirst($user->role) }}</td>
+                        <td class="py-2.5 px-2 text-gray-800">
+                            {{ $user->name }}
+                        </td>
+                        <td class="py-2.5 px-2 text-gray-800">
+                            {{ $user->email }}
+                        </td>
+                        <td class="py-2.5 px-2 text-gray-800">
+                            {{ ucfirst($user->role) }}
+                        </td>
                         <td class="py-2.5 px-2">
                             @if($user->is_active)
-                                <span class="rounded-full bg-green-600 px-2 py-0.5 text-xs font-bold text-white">Aktif</span>
+                                <span class="rounded-full bg-green-600 px-2 py-0.5 text-xs font-bold text-white">
+                                    Aktif
+                                </span>
                             @else
-                                <span class="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">Nonaktif</span>
+                                <span class="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
+                                    Nonaktif
+                                </span>
                             @endif
                         
                             <button class="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-bold text-gray-600 hover:bg-gray-100" wire:click="toggleActive({{ $user->id }})">
                                 {{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                             </button>
                         </td>
-                        <td class="py-2.5 px-2 text-gray-800">{{ $user->created_at->format('d M Y') }}</td>
+                        <td class="py-2.5 px-2 text-gray-800">
+                            {{ $user->created_at->format('d M Y') }}
+                        </td>
                         <td class="py-2.5 px-2 space-x-1">
                             <button wire:click="edit({{ $user->id }})" class="rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-700 transition">
                                 Edit
@@ -148,7 +200,9 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="p-5 text-center text-gray-500">Tidak ada data pengguna.</td>
+                        <td colspan="6" class="p-5 text-center text-gray-500">
+                            Tidak ada data pengguna.
+                        </td>
                     </tr>
                 @endforelse
             </tbody>

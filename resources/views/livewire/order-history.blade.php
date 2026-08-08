@@ -1,5 +1,5 @@
-<div class="max-w-[1250px] mx-auto px-5 my-10 font-sans">
-    <h1 class="text-[28px] font-extrabold text-slate-900 mb-[25px]">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 text-2xl font-bold text-gray-900">
         Riwayat Pesanan
     </h1>
 
@@ -18,7 +18,7 @@
                 <tr>
                     <td class="py-3 px-2 border-b border-gray-200">{{ $order->id }}</td>
                     <td class="py-3 px-2 border-b border-gray-200">{{ $order->created_at->format('d M Y H:i') }}</td>
-                    <td class="py-3 px-2 border-b border-gray-200">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
+                    <td class="py-3 px-2 border-b border-gray-200">Rp {{ number_format($order->total, 0, ',', '.') }}</td>
                     <td class="py-3 px-2 border-b border-gray-200 font-bold">
                         @if($order->status === 'pending')
                             <span class="text-amber-500">Menunggu Pembayaran</span>

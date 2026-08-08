@@ -1,6 +1,8 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Dashboard Admin</h1>
+        <h1 class="text-2xl font-bold text-gray-900">
+            Dashboard Admin
+        </h1>
     </div>
 
     <div class="flex justify-between items-center mb-4">
@@ -21,7 +23,9 @@
     <div class="flex items-center justify-between grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-4 bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
         <div class="w-full p-4 rounded-lg border border-gray-100 shadow-sm">
             <div>
-                <p class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Total Pendapatan</p>
+                <p class="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+                    Total Pendapatan
+                </p>
                 <h3 class="text-2xl font-extrabold text-gray-900 mt-1">
                     Rp {{ number_format($totalRevenue, 0, ',', '.') }}
                 </h3>
@@ -30,7 +34,9 @@
 
         <div class="w-full p-4 rounded-lg border border-gray-100 shadow-sm">
             <div>
-                <p class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Total Transaksi</p>
+                <p class="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+                    Total Transaksi
+                </p>
                 <h3 class="text-2xl font-extrabold text-gray-900 mt-1">
                     {{ number_format($totalTransactions) }}
                 </h3>
@@ -39,16 +45,24 @@
 
         <div class="w-full p-4 rounded-lg border border-gray-100 shadow-sm">
             <div>
-                <p class="text-sm font-semibold text-gray-900 uppercase tracking-wider">MAP Terjual</p>
+                <p class="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+                    MAP Terjual
+                </p>
                 <h3 class="text-2xl font-extrabold text-gray-900 mt-1">
-                    {{ number_format($totalItemsSold) }} <span class="text-xs font-normal text-gray-500">Lembar</span>
+                    {{ number_format($totalItemsSold) }}
+
+                    <span class="text-xs font-normal text-gray-500">
+                        LembarS
+                    </span>
                 </h3>
             </div>
         </div>
 
         <div class="w-full p-4 rounded-lg border border-gray-100 shadow-sm">
             <div>
-                <p class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Total Pelanggan</p>
+                <p class="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+                    Total Pelanggan
+                </p>
                 <h3 class="text-2xl font-extrabold text-gray-900 mt-1">
                     {{ number_format($totalCustomers) }}
                 </h3>

@@ -29,7 +29,9 @@
                 </label>
                 <input type="text" wire:model.live="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-blue-500 focus:outline-none">
                 @error('name')
-                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    <p class="mt-1 text-sm text-red-500">
+                        {{ $message }}
+                    </p>
                 @enderror
             </div>
 
@@ -39,7 +41,9 @@
                 </label>
                 <input type="text" wire:model="sku" class="w-full rounded-lg border border-gray-300 p-2 focus:border-blue-500 focus:outline-none">
                 @error('sku')
-                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    <p class="mt-1 text-sm text-red-500">
+                        {{ $message }}
+                    </p>
                 @enderror
             </div>
 
@@ -69,9 +73,15 @@
                     Stock Status
                 </label>
                 <select wire:model="stock_status" class="w-full rounded-lg border border-gray-300 p-2 focus:border-blue-500 focus:outline-none bg-white">
-                    <option value="available">Available</option>
-                    <option value="preorder">Pre Order</option>
-                    <option value="out_of_stock">Out of Stock</option>
+                    <option value="available">
+                        Available
+                    </option>
+                    <option value="preorder">
+                        Pre Order
+                    </option>
+                    <option value="out_of_stock">
+                        Out of Stock
+                    </option>
                 </select>
             </div>
 
@@ -117,7 +127,9 @@
             </label>
 
             <div class="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-gray-400">
-                <p class="mb-2 font-medium">Upload Gallery</p>
+                <p class="mb-2 font-medium">
+                    Upload Gallery
+                </p>
 
                 <input type="file" wire:model="gallery" multiple accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer"/>
                 
