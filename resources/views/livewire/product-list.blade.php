@@ -1,103 +1,63 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">        
-    <div x-data="{ show: false, message: '', type: 'success' }" x-on:alert.window="show = true; message = $event.detail.message; type = $event.detail.type; setTimeout(() => show = false, 3000)" x-show="show" x-transition x-cloak class="fixed bottom-5 right-5 z-50 p-4 rounded-2xl shadow-xl text-white font-medium text-sm flex items-center gap-2" :class="type === 'warning' ? 'bg-amber-500' : (type === 'error' ? 'bg-rose-600' : 'bg-emerald-600')">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-        </svg>
-        <span x-text="message"></span>
-    </div>
-
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+<div class="mx-auto max-w-7xl px-4 py-8">
+    <div class="mb-6 flex flex-col gap-4 rounded-xl bg-white p-5 shadow-sm md:flex-row md:items-end">
+        <div class="flex-1">
+            <label class="mb-1 block text-sm font-medium text-slate-700">Cari produk</label>
+            <input wire:model.live.debounce.350ms="search" type="search" placeholder="Nama produk atau SKU" class="w-full rounded-lg border-slate-300">
+        </div>
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Katalog Produk</h1>
+            <label class="mb-1 block text-sm font-medium text-slate-700">Kategori</label>
+            <select wire:model.live="selectedCategory" class="rounded-lg border-slate-300">
+                <option value="">Semua kategori</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                @endforeach
+            </select>
         </div>
-
-        <div class="relative w-full md:w-80">
-            <input type="text" 
-                    wire:model.live.debounce.300ms="search" 
-                   placeholder="Cari nama produk..." 
-                   class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </div>
+        <div class="grid grid-cols-2 gap-2">
+            <input wire:model.live.debounce.500ms="minPrice" type="number" min="0" placeholder="Harga min" class="w-32 rounded-lg border-slate-300">
+            <input wire:model.live.debounce.500ms="maxPrice" type="number" min="0" placeholder="Harga max" class="w-32 rounded-lg border-slate-300">
         </div>
+        <select wire:model.live="sort" class="rounded-lg border-slate-300">
+            <option value="latest">Terbaru</option>
+            <option value="price_low">Harga terendah</option>
+            <option value="price_high">Harga tertinggi</option>
+            <option value="name">Nama A-Z</option>
+        </select>
     </div>
 
-    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-6 no-scrollbar">
-        <button wire:click="$set('selectedCategory', null)" 
-                class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border transition-all
-                {{ is_null($selectedCategory) ? 'bg-black text-white border-black' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50' }}">
-            Semua Kategori
-        </button>
+    <div wire:loading.flex class="mb-4 items-center gap-2 text-sm text-indigo-600">Memuat produk...</div>
 
-        @foreach($categories as $category)
-            <button wire:click="$set('selectedCategory', {{ $category->id }})" 
-                    class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border transition-all
-                    {{ $selectedCategory == $category->id ? 'bg-black text-white border-black' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50' }}">
-                {{ $category->name }}
-            </button>
-        @endforeach
-    </div>
-
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         @forelse($products as $product)
-            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-200 flex flex-col justify-between group">
-                <div>
-                    <a href="{{ route('product.detail', $product->slug) }}" wire:navigate class="block relative aspect-square bg-gray-50 overflow-hidden">
-                        @if($product->images && $product->images->first())
-                            <img src="{{ asset('storage/' . $product->images->first()->image_path) }}" 
-                                alt="{{ $product->name }}" 
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                No Image
-                            </div>
-                        @endif
-
-                        <span class="absolute top-2 left-2 bg-white/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-gray-800 border border-gray-100">
-                            {{ $product->category->name ?? 'Uncategorized' }}
-                        </span>
-                    </a>
-
-                    <div class="p-4">
-                        <a href="{{ route('product.detail', $product->slug) }}" wire:navigate class="block font-semibold text-gray-900 text-sm hover:text-gray-600 line-clamp-2 mb-2">
-                            {{ $product->name }}
-                        </a>
-                        <p class="font-bold text-gray-900 text-base">
-                            Rp {{ number_format($product->price, 0, ',', '.') }}
-                        </p>
-                        <p class="text-xs text-gray-400 mt-1">
-                            Stok: {{ $product->stock_quantity }}
-                        </p>
-                    </div>
+            @php
+                $variant = $product->defaultVariant ?? $product->activeVariants->first();
+                $image = $product->images->first();
+                $hasChoices = $product->activeVariants->count() > 1;
+            @endphp
+            <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <a href="{{ route('product.detail', $product->slug) }}" wire:navigate>
+                    @if($image)
+                        <img src="{{ Storage::url($image->image_path) }}" alt="{{ $image->alt_text ?: $product->name }}" class="h-52 w-full object-cover">
+                    @else
+                        <div class="flex h-52 items-center justify-center bg-slate-100 text-slate-400">Belum ada gambar</div>
+                    @endif
+                </a>
+                <div class="p-4">
+                    <div class="text-xs font-medium text-indigo-600">{{ $product->category->name }}</div>
+                    <a href="{{ route('product.detail', $product->slug) }}" class="mt-1 block font-bold text-slate-900" wire:navigate>{{ $product->name }}</a>
+                    <div class="mt-2 text-lg font-extrabold text-indigo-600">Rp {{ number_format($variant?->price ?? 0, 0, ',', '.') }}</div>
+                    <div class="mt-1 text-xs text-slate-500">{{ $hasChoices ? $product->activeVariants->count().' pilihan varian' : 'Stok '.($variant?->stock_quantity ?? 0) }}</div>
+                    @if($hasChoices)
+                        <a href="{{ route('product.detail', $product->slug) }}" class="mt-4 block rounded-lg bg-slate-900 px-4 py-2 text-center text-sm font-semibold text-white" wire:navigate>Pilih varian</a>
+                    @else
+                        <button wire:click="addToCart({{ $variant?->id }})" wire:loading.attr="disabled" @disabled(!$variant?->isPurchasable()) class="mt-4 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white {{ $variant?->isPurchasable() ? 'bg-slate-900' : 'cursor-not-allowed bg-slate-400' }}">Tambah ke keranjang</button>
+                    @endif
                 </div>
-
-                <div class="p-4 pt-0">
-                    <button wire:click="addToCart({{ $product->id }})" 
-                        wire:loading.attr="disabled"
-                        style="background: #f8fafc; padding: 8px; border-radius: 8px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; color: #0f172a; border: 1px solid #e2e8f0; cursor: {{ $product->stock_quantity > 0 ? 'pointer' : 'not-allowed' }};">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-
-                        <span wire:loading.remove wire:target="addToCart({{ $product->id }})">Keranjang</span>
-                        <span wire:loading wire:target="addToCart({{ $product->id }})">Memproses...</span>
-                    </button>
-                </div>
-            </div>
+            </article>
         @empty
-            <div class="col-span-full py-16 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-gray-300 mx-auto mb-3">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                </svg>
-                <p class="text-gray-500 text-sm font-medium">Tidak ada produk yang ditemukan</p>
-                <p class="text-xs text-gray-400 mt-1">Coba gunakan kata kunci lain atau pilih kategori berbeda.</p>
-            </div>
+            <div class="col-span-full rounded-xl border-2 border-dashed border-slate-200 py-16 text-center text-slate-500">Produk tidak ditemukan.</div>
         @endforelse
     </div>
 
-    <div class="mt-8">
-        {{ $products->links() }}
-    </div>
+    <div class="mt-8">{{ $products->links() }}</div>
 </div>

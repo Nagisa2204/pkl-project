@@ -11,14 +11,14 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $cart_id
- * @property int $product_id
+ * @property int $product_variant_id
  * @property int $quantity
  * @property int $price
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
 */
 
-#[Fillable(['cart_id', 'product_id', 'quantity', 'price'])]
+#[Fillable(['cart_id', 'product_variant_id', 'quantity', 'price'])]
 class CartItem extends Model
 {
     use HasFactory;
@@ -28,8 +28,9 @@ class CartItem extends Model
         return $this->belongsTo(Cart::class);    
     }
 
-    public function product(): BelongsTo
+    public function variant(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
+
 }

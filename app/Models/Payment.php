@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
  * @property int $biller_code
  * @property string $status
  * @property int $gross_amount
- * @property int $refund_amount
+ * @property int $refunded_amount
  * @property string $snap_token
  * @property string $redirect_url
  * @property Carbon|null $expiry_at
@@ -32,7 +32,12 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 
-#[Fillable(['order_id', 'provider', 'provider_order_id', 'transaction_id', 'payment_type', 'bank', 'va_number', 'bill_key', 'biller_code', 'status', 'gross_amount', 'refund_amount', 'snap_token', 'redirect_url', 'raw_response', 'expiry_at', 'paid_at'])]
+#[Fillable([
+    'order_id', 'provider', 'provider_order_id', 'transaction_id', 'payment_type',
+    'bank', 'va_number', 'bill_key', 'biller_code', 'status', 'fraud_status',
+    'status_code', 'gross_amount', 'refunded_amount', 'snap_token', 'redirect_url',
+    'raw_response', 'expiry_at', 'paid_at',
+])]
 #[Hidden(['raw_response', 'snap_token'])]
 class Payment extends Model
 {

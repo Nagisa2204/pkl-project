@@ -17,6 +17,11 @@ class AdminOrderHistory extends Component
 
     protected $paginationTheme = 'tailwind';
 
+    public function mount(): void
+    {
+        $this->authorize('admin');
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -38,6 +43,9 @@ class AdminOrderHistory extends Component
                         $user->where('name', 'like', '%' . $this->search . '%');
                     });
             });
+        }
+        if ($this->status) {
+            $orders->where('status', $this->status);
         }
         return view('livewire.admin.admin-order-history', [
             'orders' => $orders->latest()->paginate(10)

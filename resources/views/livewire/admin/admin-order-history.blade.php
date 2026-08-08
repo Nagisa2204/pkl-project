@@ -29,11 +29,11 @@
                     </th>
                 </tr>
             </thead>
-            <tbody">
+            <tbody>
                 @forelse($orders as $order)
                     <tr>
                         <td class="py-3 px-2 border-b border-gray-200">
-                            {{ $order->id }}
+                            {{ $order->order_no }}
                         </td>
                         <td class="py-3 px-2 border-b border-gray-200">
                             {{ $order->user->name }}
@@ -48,7 +48,7 @@
                             {{ $order->created_at->format('d M Y H:i') }}
                         </td>
                         <td class="py-3 px-2 border-b border-gray-200">
-                            <a href="{{ route('admin.orders.detail', $order->id) }}" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                            <a href="{{ route('admin.orders.detail', $order->invoice_no) }}" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
                                 View
                             </a>
                         </td>
@@ -63,4 +63,5 @@
             </tbody>
         </table>
     </div>
+    <div>{{ $orders->links() }}</div>
 </div>

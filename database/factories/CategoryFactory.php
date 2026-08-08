@@ -19,7 +19,7 @@ class CategoryFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'slug' => fake()->name(),
+            'slug' => fake()->unique()->slug(),
         ];
     }
 }

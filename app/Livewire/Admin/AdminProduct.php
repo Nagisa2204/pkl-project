@@ -18,6 +18,11 @@ class AdminProduct extends Component
 
     protected $paginationTheme = 'tailwind';
 
+    public function mount(): void
+    {
+        $this->authorize('admin');
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -30,13 +35,15 @@ class AdminProduct extends Component
     
     public function deleteProduct($id)
     {
-        Product::findorFail($id)->delete();
+        $this->authorize('admin');
+        Product::findOrFail($id)->delete();
         session()->flash('success', 'Product deleted successfully.');
     }
 
     public function toogleStatus($id)
     {
-        $product = Product::findorFail($id);
+        $this->authorize('admin');
+        $product = Product::findOrFail($id);
         $product->update([
             'is_active' => !$product->is_active
         ]);
@@ -44,7 +51,7 @@ class AdminProduct extends Component
 
     public function render()
     {
-        $products = Product::with('category', 'images');
+        $products = Product::with(['category', 'images', 'defaultVariant', 'activeVariants']);
 
         if ($this->search) {
             $products->where('name', 'like', "%{$this->search}%");

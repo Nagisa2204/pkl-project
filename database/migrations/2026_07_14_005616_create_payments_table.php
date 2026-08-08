@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string('bill_key', 255)->nullable();
             $table->string('biller_code', 255)->nullable();
             $table->string('status', 255);
+            $table->string('fraud_status', 30)->nullable();
+            $table->string('status_code', 10)->nullable();
             $table->unsignedBigInteger('gross_amount');
             $table->unsignedBigInteger('refunded_amount')->default(0);
             $table->string('snap_token', 255)->nullable();
@@ -31,6 +33,10 @@ return new class extends Migration
             $table->timestamp('expiry_at')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
+
+            $table->unique(['provider', 'provider_order_id']);
+            $table->unique(['provider', 'transaction_id']);
+            $table->index(['order_id', 'status']);
         });
     }
 

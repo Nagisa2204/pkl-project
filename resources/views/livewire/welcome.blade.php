@@ -1,8 +1,4 @@
 <x-app-layout>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            </div>
-        </div>
-    </div>
+    <section class="bg-slate-900 px-4 py-20 text-white"><div class="mx-auto max-w-6xl"><p class="text-sm font-bold uppercase tracking-widest text-indigo-300">Selamat datang</p><h1 class="mt-3 max-w-3xl text-4xl font-extrabold md:text-6xl">{{ $storeSettings->store_name }}</h1><p class="mt-5 max-w-2xl text-lg text-slate-300">{{ $storeSettings->description ?: 'Temukan produk terbaik dan selesaikan pembelian dengan pengiriman serta pembayaran yang aman.' }}</p><a href="{{ route('product.index') }}" class="mt-7 inline-block rounded-lg bg-white px-6 py-3 font-bold text-slate-900" wire:navigate>Belanja sekarang</a></div></section>
+    <section class="mx-auto grid max-w-6xl gap-4 px-4 py-10 md:grid-cols-3"><div class="rounded-xl bg-white p-5 shadow-sm"><strong>Pembayaran aman</strong><p class="mt-1 text-sm text-slate-500">Status pembayaran diverifikasi langsung melalui Midtrans.</p></div><div class="rounded-xl bg-white p-5 shadow-sm"><strong>Ongkir transparan</strong><p class="mt-1 text-sm text-slate-500">Tarif pengiriman dihitung sesuai alamat dan berat produk.</p></div><div class="rounded-xl bg-white p-5 shadow-sm"><strong>Bantuan toko</strong><p class="mt-1 text-sm text-slate-500">{{ $storeSettings->whatsapp ?: $storeSettings->email ?: 'Hubungi kami melalui halaman informasi toko.' }}</p></div></section>
 </x-app-layout>

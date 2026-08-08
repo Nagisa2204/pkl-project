@@ -5,197 +5,287 @@ namespace App\Livewire\Admin;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ProductVariant;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 #[Layout('layouts.admin')]
 class AdminManageProduct extends Component
 {
     use WithFileUploads;
+
     public ?Product $product = null;
+    public ?int $category_id = null;
+    public string $name = '';
+    public string $slug = '';
+    public ?string $description = null;
+    public int $min_order_quantity = 1;
+    public bool $is_active = true;
+    public array $options = [];
+    public array $variants = [];
+    public array $gallery = [];
 
-    public $name = '';
-    public $slug = '';
-    public $sku = '';
-    public $description = '';
-
-    public $price = 0;
-
-    public $stock_status = 'available';
-    public $stock_quantity = 0;
-
-    public $weight_grams = 0;
-    public $preorder_days = 0;
-    public $min_order_quantity = 1;
-
-    public $gallery = [];
-
-    public $is_active = true;
-
-    protected function rules()
+    public function mount(?Product $product = null): void
     {
-        $productId = $this->product?->id;
+        $this->authorize('admin');
+        $this->product = $product?->exists ? $product : null;
 
-        return [
-            'name' => 'required|string|max:255',
-
-            'slug' => 'required|string|max:255|unique:products,slug,' . $productId,
-
-            'sku' => 'required|string|max:255|unique:products,sku,' . $productId,
-
-            'description' => 'nullable|string',
-
-            'price' => 'required|numeric|min:0',
-
-            'stock_status' => 'required|string',
-
-            'stock_quantity' => 'required|integer|min:0',
-
-            'weight_grams' => 'required|integer|min:0',
-
-            'preorder_days' => 'required|integer|min:0',
-
-            'min_order_quantity' => 'required|integer|min:1',
-
-            'gallery' => 'nullable|array',
-
-            'gallery.*' => 'nullable|image|max:2048',
-
-            'is_active' => 'boolean',
-        ];
-    }
-
-    public function mount(Product $product = null)
-    {
-        if ($product && $product->exists) {
-
-            $this->product = $product;
-
-            $this->name = $product->name;
-            $this->slug = $product->slug;
-            $this->sku = $product->sku;
-            $this->description = $product->description;
-
-            $this->price = $product->price;
-
-            $this->stock_status = $product->stock_status;
-            $this->stock_quantity = $product->stock_quantity;
-
-            $this->weight_grams = $product->weight_grams;
-            $this->preorder_days = $product->preorder_days;
-            $this->min_order_quantity = $product->min_order_quantity;
-
-            $this->is_active = $product->is_active;
+        if (! $this->product) {
+            $this->category_id = Category::where('is_active', true)->value('id');
+            $this->options = [['id' => null, 'name' => '', 'values' => '']];
+            $this->variants = [$this->emptyVariant([], true)];
+            return;
         }
+
+        $this->product->load(['options.values', 'variants.optionValues.option', 'images']);
+        $this->category_id = $this->product->category_id;
+        $this->name = $this->product->name;
+        $this->slug = $this->product->slug;
+        $this->description = $this->product->description;
+        $this->min_order_quantity = $this->product->min_order_quantity;
+        $this->is_active = $this->product->is_active;
+        $this->options = $this->product->options->map(fn ($option) => [
+            'id' => $option->id,
+            'name' => $option->name,
+            'values' => $option->values->pluck('value')->implode(', '),
+        ])->values()->all() ?: [['id' => null, 'name' => '', 'values' => '']];
+        $this->variants = $this->product->variants->map(fn ($variant) => [
+            'id' => $variant->id,
+            'label' => $variant->displayName(),
+            'selection' => $variant->optionValues->mapWithKeys(fn ($value) => [$value->option->name => $value->value])->all(),
+            'sku' => $variant->sku,
+            'price' => $variant->price,
+            'compare_at_price' => $variant->compare_at_price,
+            'stock_quantity' => $variant->stock_quantity,
+            'stock_status' => $variant->stock_status,
+            'weight_grams' => $variant->weight_grams,
+            'preorder_days' => $variant->preorder_days,
+            'is_default' => $variant->is_default,
+            'is_active' => $variant->is_active,
+        ])->values()->all();
     }
 
-    public function updatedName()
+    public function updatedName(): void
     {
-        if (!$this->product) {
+        if (! $this->product) {
             $this->slug = Str::slug($this->name);
         }
     }
 
-    public function save()
+    public function addOption(): void
     {
-        $this->validate();
+        $this->options[] = ['id' => null, 'name' => '', 'values' => ''];
+    }
 
-        $category = Category::first();
+    public function removeOption(int $index): void
+    {
+        unset($this->options[$index]);
+        $this->options = array_values($this->options);
+        $this->generateVariants();
+    }
 
-        if (!$category) {
-            session()->flash(
-                'error',
-                'Kategori Produk Fisik belum tersedia.'
-            );
+    public function generateVariants(): void
+    {
+        $optionSets = collect($this->options)->map(function ($option) {
+            $name = trim((string) ($option['name'] ?? ''));
+            $values = collect(explode(',', (string) ($option['values'] ?? '')))
+                ->map(fn ($value) => trim($value))->filter()->unique(fn ($value) => mb_strtolower($value))->values()->all();
+            return compact('name', 'values');
+        })->filter(fn ($option) => $option['name'] !== '' && $option['values'] !== [])->values()->all();
 
-            return;
+        $old = collect($this->variants)->keyBy(fn ($variant) => mb_strtolower((string) ($variant['label'] ?? '')));
+        $combinations = [[]];
+
+        foreach ($optionSets as $option) {
+            $next = [];
+            foreach ($combinations as $combination) {
+                foreach ($option['values'] as $value) {
+                    $next[] = [...$combination, $option['name'] => $value];
+                }
+            }
+            $combinations = $next;
         }
 
-        $data = [
+        if ($optionSets === []) {
+            $combinations = [[]];
+        }
 
-            'category_id' => $category->id,
+        $this->variants = collect($combinations)->map(function ($selection, $index) use ($old) {
+            $label = $selection ? implode(' / ', array_values($selection)) : 'Default';
+            return $old->get(mb_strtolower($label), $this->emptyVariant($selection, $index === 0)) + [
+                'label' => $label,
+                'selection' => $selection,
+                'is_default' => $index === 0,
+            ];
+        })->values()->all();
+    }
 
-            'name' => $this->name,
-            'slug' => $this->slug,
-            'sku' => $this->sku,
-            'description' => $this->description,
-
-            'price' => $this->price,
-
-            'stock_status' => $this->stock_status,
-            'stock_quantity' => $this->stock_quantity,
-
-            'weight_grams' => $this->weight_grams,
-            'preorder_days' => $this->preorder_days,
-            'min_order_quantity' => $this->min_order_quantity,
-
-            'is_active' => $this->is_active
+    public function save(): mixed
+    {
+        $this->authorize('admin');
+        $productId = $this->product?->id;
+        $rules = [
+            'category_id' => ['required', 'exists:categories,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'alpha_dash', 'max:255', Rule::unique('products')->ignore($productId)],
+            'description' => ['nullable', 'string'],
+            'min_order_quantity' => ['required', 'integer', 'min:1'],
+            'is_active' => ['boolean'],
+            'options' => ['array', 'max:5'],
+            'options.*.name' => ['nullable', 'string', 'max:100'],
+            'options.*.values' => ['nullable', 'string', 'max:1000'],
+            'variants' => ['required', 'array', 'min:1', 'max:100'],
+            'variants.*.sku' => ['required', 'string', 'max:255', 'distinct'],
+            'variants.*.price' => ['required', 'integer', 'min:0'],
+            'variants.*.compare_at_price' => ['nullable', 'integer', 'gt:variants.*.price'],
+            'variants.*.stock_quantity' => ['required', 'integer', 'min:0'],
+            'variants.*.stock_status' => ['required', Rule::in(['available', 'preorder', 'out_of_stock'])],
+            'variants.*.weight_grams' => ['required', 'integer', 'min:0'],
+            'variants.*.preorder_days' => ['required', 'integer', 'min:0'],
+            'variants.*.is_active' => ['boolean'],
+            'gallery' => ['array', 'max:10'],
+            'gallery.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ];
-        
-        if ($this->product) {
-            $this->product->update($data);
-            $product = $this->product;
-        } else {
-            $product = Product::create($data);
+        $this->validate($rules);
+
+        foreach ($this->variants as $index => $variant) {
+            $duplicate = ProductVariant::withTrashed()->where('sku', $variant['sku'])
+                ->when($variant['id'] ?? null, fn ($query, $id) => $query->where('id', '!=', $id))->exists();
+            if ($duplicate) {
+                $this->addError("variants.$index.sku", 'SKU sudah digunakan.');
+            }
         }
-        $firstImagePath = $product->thumbnail;
-        $nextSortOrder = $product->images()->max('sort_order') ?? -1;
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return null;
+        }
 
-        foreach ($this->gallery as $image) {
+        $product = DB::transaction(function () {
+            $product = $this->product ?? new Product;
+            $product->fill([
+                'category_id' => $this->category_id,
+                'name' => $this->name,
+                'slug' => $this->slug,
+                'description' => $this->description,
+                'min_order_quantity' => $this->min_order_quantity,
+                'is_active' => $this->is_active,
+            ])->save();
 
-            $nextSortOrder++;
-            $path = $image->store('products/gallery', 'public');
-            if (empty($firstImagePath)) {
-                $firstImagePath = $path;
+            $optionMap = [];
+            $keptOptionIds = [];
+            foreach ($this->options as $position => $input) {
+                $name = trim((string) ($input['name'] ?? ''));
+                $values = collect(explode(',', (string) ($input['values'] ?? '')))->map(fn ($value) => trim($value))->filter()->unique()->values();
+                if ($name === '' || $values->isEmpty()) continue;
+
+                $option = $product->options()->updateOrCreate(
+                    ['id' => $input['id'] ?? null],
+                    ['name' => $name, 'sort_order' => $position]
+                );
+                $keptOptionIds[] = $option->id;
+                $keptValueIds = [];
+                foreach ($values as $valuePosition => $valueText) {
+                    $value = $option->values()->updateOrCreate(['value' => $valueText], ['sort_order' => $valuePosition]);
+                    $keptValueIds[] = $value->id;
+                    $optionMap[$name][$valueText] = ['option_id' => $option->id, 'value_id' => $value->id];
+                }
+                $option->values()->whereNotIn('id', $keptValueIds)->delete();
             }
 
-            ProductImage::create([
-                'product_id' => $product->id,
-                'image_path' => $path,
-                'caption' => null,
-                'sort_order' => $nextSortOrder,
-            ]);
-        }
+            $keptVariantIds = [];
+            foreach ($this->variants as $position => $input) {
+                $selection = $input['selection'] ?? [];
+                $pivot = [];
+                foreach ($selection as $optionName => $valueText) {
+                    $mapped = $optionMap[$optionName][$valueText] ?? null;
+                    if (! $mapped) continue;
+                    $pivot[$mapped['value_id']] = ['product_option_id' => $mapped['option_id']];
+                }
+                $key = $pivot ? collect(array_keys($pivot))->sort()->implode('-') : 'default';
+                $variant = ProductVariant::withTrashed()->where('product_id', $product->id)
+                    ->when($input['id'] ?? null, fn ($query, $id) => $query->whereKey($id), fn ($query) => $query->where('combination_key', $key))
+                    ->first() ?? new ProductVariant(['product_id' => $product->id]);
+                $variant->fill([
+                    'sku' => $input['sku'], 'combination_key' => $key, 'price' => $input['price'],
+                    'compare_at_price' => $input['compare_at_price'] ?: null,
+                    'stock_quantity' => $input['stock_quantity'], 'stock_status' => $input['stock_status'],
+                    'weight_grams' => $input['weight_grams'], 'preorder_days' => $input['preorder_days'],
+                    'is_default' => $position === 0, 'is_active' => $input['is_active'] ?? true,
+                ])->save();
+                if ($variant->trashed()) $variant->restore();
+                $variant->optionValues()->sync($pivot);
+                $keptVariantIds[] = $variant->id;
+            }
 
-        if ($product->thumbnail !== $firstImagePath) {
-            $product->update([
-                'thumbnail' => $firstImagePath,
-            ]);
-        }
+            $product->variants()->whereNotIn('id', $keptVariantIds)->delete();
+            $product->options()->when($keptOptionIds, fn ($query) => $query->whereNotIn('id', $keptOptionIds))->delete();
 
-        session()->flash(
-            'success',
-            'Product saved successfully.'
-        );
+            $next = (int) ($product->images()->max('sort_order') ?? -1);
+            $hasPrimary = $product->images()->where('is_primary', true)->exists();
+            foreach ($this->gallery as $image) {
+                $path = $image->store('products/gallery', 'public');
+                $product->images()->create([
+                    'image_path' => $path,
+                    'alt_text' => $product->name,
+                    'is_primary' => ! $hasPrimary,
+                    'sort_order' => ++$next,
+                ]);
+                $hasPrimary = true;
+            }
 
+            return $product;
+        });
+
+        session()->flash('success', 'Produk dan varian berhasil disimpan.');
+        return redirect()->route('admin.products.manage', $product);
+    }
+
+    public function setPrimaryImage(int $imageId): void
+    {
+        $this->authorize('admin');
+        abort_unless($this->product?->images()->whereKey($imageId)->exists(), 404);
+        DB::transaction(function () use ($imageId) {
+            $this->product->images()->update(['is_primary' => false]);
+            $this->product->images()->whereKey($imageId)->update(['is_primary' => true]);
+        });
+        $this->product->load('images');
+    }
+
+    public function deleteImage(int $imageId): void
+    {
+        $this->authorize('admin');
+        $image = $this->product?->images()->findOrFail($imageId);
+        Storage::disk('public')->delete($image->image_path);
+        $wasPrimary = $image->is_primary;
+        $image->delete();
+        if ($wasPrimary) $this->product->images()->orderBy('sort_order')->first()?->update(['is_primary' => true]);
+        $this->product->load('images');
+    }
+
+    public function delete(): mixed
+    {
+        $this->authorize('admin');
+        $this->product?->delete();
+        session()->flash('success', 'Produk dinonaktifkan.');
         return redirect()->route('admin.products');
     }
 
-    public function delete()
+    private function emptyVariant(array $selection, bool $default): array
     {
-        if (!$this->product) {
-            return;
-        }
-
-        if ($this->product->thumbnail && Storage::disk('public')->exists($this->product->thumbnail)) {
-            Storage::disk('public')->delete($this->product->thumbnail);
-        }
-
-        $this->product->delete($this->product->id);
-
-        session()->flash(
-            'success',
-            'Product deleted successfully.'
-        );
-
-        return redirect()->route('admin.products');
+        $label = $selection ? implode(' / ', array_values($selection)) : 'Default';
+        return ['id' => null, 'label' => $label, 'selection' => $selection, 'sku' => '', 'price' => 0,
+            'compare_at_price' => null, 'stock_quantity' => 0, 'stock_status' => 'available',
+            'weight_grams' => 0, 'preorder_days' => 0, 'is_default' => $default, 'is_active' => true];
     }
 
     public function render()
     {
-        return view('livewire.admin.admin-manage-product');
+        return view('livewire.admin.admin-manage-product', [
+            'categories' => Category::where('is_active', true)->orderBy('name')->get(),
+        ]);
     }
 }

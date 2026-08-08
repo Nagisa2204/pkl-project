@@ -22,7 +22,8 @@ new class extends Component
             
             <div class="flex items-center gap-3">
                 <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2">
-                    <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                    @if($storeSettings?->logo_path)<img src="{{ Storage::url($storeSettings->logo_path) }}" alt="{{ $storeSettings->store_name }}" class="h-9 w-auto">@else<x-application-logo class="block h-9 w-auto fill-current text-gray-800" />@endif
+                    <span class="font-bold text-slate-900">{{ $storeSettings->store_name }}</span>
                 </a>
             </div>
 

@@ -35,7 +35,13 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 
-#[Fillable(['order_id','user_address_id', 'receiver_name', 'phone', 'address_line', 'courier_note', 'destination_id', 'destination_label', 'courier_code', 'courier_name', 'service_code', 'service_name', 'cost', 'etd', 'awb_number', 'status', 'raw_response', 'shipped_at', 'delivered_at'])]
+#[Fillable([
+    'order_id', 'user_address_id', 'receiver_name', 'phone', 'address_line',
+    'province_name', 'city_name', 'district_name', 'subdistrict_name', 'postal_code',
+    'courier_note', 'destination_id', 'destination_label', 'courier_code',
+    'courier_name', 'service_code', 'service_name', 'cost', 'etd', 'awb_number',
+    'status', 'raw_response', 'shipped_at', 'delivered_at',
+])]
 #[Hidden(['raw_response'])]
 class Shipment extends Model
 {

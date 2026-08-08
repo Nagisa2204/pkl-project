@@ -16,24 +16,15 @@
         <tbody>
             @forelse($orders as $order)
                 <tr>
-                    <td class="py-3 px-2 border-b border-gray-200">{{ $order->id }}</td>
+                    <td class="py-3 px-2 border-b border-gray-200">{{ $order->order_no }}</td>
                     <td class="py-3 px-2 border-b border-gray-200">{{ $order->created_at->format('d M Y H:i') }}</td>
                     <td class="py-3 px-2 border-b border-gray-200">Rp {{ number_format($order->total, 0, ',', '.') }}</td>
                     <td class="py-3 px-2 border-b border-gray-200 font-bold">
-                        @if($order->status === 'pending')
-                            <span class="text-amber-500">Menunggu Pembayaran</span>
-                        @elseif($order->status === 'paid')
-                            <span class="text-emerald-500">Dibayar</span>
-                        @elseif($order->status === 'shipped')
-                            <span class="text-blue-500">Dikirim</span>
-                        @elseif($order->status === 'completed')
-                            <span class="text-green-600">Selesai</span>
-                        @elseif($order->status === 'cancelled')
-                            <span class="text-red-500">Dibatalkan</span>
-                        @endif
+                        @php($statusLabels = ['pending_payment' => 'Menunggu Pembayaran', 'processing' => 'Diproses', 'shipped' => 'Dikirim', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'])
+                        <span class="{{ in_array($order->status, ['cancelled'], true) ? 'text-red-500' : ($order->status === 'completed' ? 'text-green-600' : 'text-indigo-600') }}">{{ $statusLabels[$order->status] ?? ucfirst(str_replace('_', ' ', $order->status)) }}</span>
                     </td>
                     <td class="py-3 px-2 border-b border-gray-200">
-                        <a href="{{ route('orders.detail', $order->id) }}" class="text-blue-500 font-bold hover:underline">
+                        <a href="{{ route('orders.detail', $order->invoice_no) }}" class="text-blue-500 font-bold hover:underline">
                             Lihat Detail
                         </a>
                     </td>
@@ -45,4 +36,5 @@
             @endforelse
         </tbody>
     </table>
+    <div class="mt-5">{{ $orders->links() }}</div>
 </div>

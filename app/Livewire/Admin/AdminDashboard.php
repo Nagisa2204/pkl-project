@@ -23,6 +23,7 @@ class AdminDashboard extends Component
 
     public function mount()
     {
+        $this->authorize('admin');
         $this->loadStatistics();
         $this->loadChart();
     }

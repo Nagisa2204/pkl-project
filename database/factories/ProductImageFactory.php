@@ -13,7 +13,8 @@ class ProductImageFactory extends Factory
     {
         return [
             'image_path' => 'https://via.placeholder.com/640x480.png',
-            'caption' => $this->faker->sentence(),
+            'alt_text' => $this->faker->sentence(),
+            'is_primary' => false,
             'sort_order' => 1,
         ];
     }
