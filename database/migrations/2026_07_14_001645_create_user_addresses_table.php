@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('label', 255);
             $table->string('receiver_name', 255);
-            $table->string('phone', 30);
+            $table->string('phone', 30)->nullable();
             $table->text('address_line');
             $table->string('province_name', 255);
             $table->string('city_name', 255);

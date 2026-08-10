@@ -45,6 +45,8 @@ new class extends Component
                 <span>Products</span>
             </a>
 
+            <a href="{{ route('admin.categories') }}" wire:navigate class="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 transition {{ request()->routeIs('admin.categories') ? 'bg-orange-500 text-black border-orange-500' : 'text-gray-700 hover:bg-gray-100' }}"><span>Kategori</span></a>
+
             <a href="{{ route('admin.orders') }}" wire:navigate class="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 transition {{ request()->routeIs('admin.orders*') ? 'bg-orange-500 text-black border-orange-500' : 'text-gray-700 hover:bg-gray-100' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12M8.25 17.25h12M3.75 6.75h.008v.008H3.75zm0 5.25h.008v.008H3.75zm0 5.25h.008v.008H3.75z" />
@@ -58,6 +60,8 @@ new class extends Component
                 </svg>
                 <span>Accounts</span>
             </a>
+
+            <a href="{{ route('admin.settings') }}" wire:navigate class="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 transition {{ request()->routeIs('admin.settings') ? 'bg-orange-500 text-black border-orange-500' : 'text-gray-700 hover:bg-gray-100' }}"><span>Pengaturan Toko</span></a>
         </div>
     </nav>
 

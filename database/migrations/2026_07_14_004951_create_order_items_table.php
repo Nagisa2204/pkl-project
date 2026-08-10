@@ -15,12 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->constrained();
+            $table->foreignId('product_variant_id')->constrained('product_variants')->restrictOnDelete();
             $table->string('product_name', 255);
+            $table->string('variant_name', 255)->nullable();
+            $table->json('variant_options')->nullable();
             $table->string('sku', 255)->index();
             $table->unsignedBigInteger('product_price');
             $table->unsignedInteger('quantity');
             $table->unsignedInteger('weight_grams');
-            $table->string('stock_status', 30);
+            $table->boolean('stock_reserved')->default(true);
             $table->unsignedBigInteger('subtotal');
             $table->timestamps();
             $table->softDeletes();

@@ -18,6 +18,11 @@ return new class extends Migration
             $table->string('receiver_name', 255);
             $table->string('phone', 30);
             $table->text('address_line');
+            $table->string('province_name');
+            $table->string('city_name');
+            $table->string('district_name');
+            $table->string('subdistrict_name');
+            $table->string('postal_code', 20);
             $table->text('courier_note')->nullable();
             $table->unsignedBigInteger('destination_id');
             $table->string('destination_label', 255);
@@ -33,6 +38,7 @@ return new class extends Migration
             $table->timestamp('shipped_at')->nullable();
             $table->timestamp('delivered_at')->nullable();
             $table->timestamps();
+            $table->unique('order_id');
         });
     }
 

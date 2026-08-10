@@ -3,10 +3,13 @@
 use Illuminate\Support\Facades\Password;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use App\Rules\ValidTurnstile;
+use Illuminate\Validation\Rule;
 
 new #[Layout('layouts.guest')] class extends Component
 {
     public string $email = '';
+    public string $turnstileToken = '';
 
     /**
      * Send a password reset link to the provided email address.
@@ -15,6 +18,7 @@ new #[Layout('layouts.guest')] class extends Component
     {
         $this->validate([
             'email' => ['required', 'string', 'email'],
+            'turnstileToken' => [Rule::requiredIf(config('turnstile.enabled')), new ValidTurnstile],
         ]);
 
         // We will send the password reset link to this user. Once we have attempted
@@ -51,6 +55,8 @@ new #[Layout('layouts.guest')] class extends Component
             <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
+
+        <div class="mt-4"><x-turnstile wire-model="turnstileToken" /></div>
 
         <div class="flex items-center justify-end mt-4">
             <x-primary-button>

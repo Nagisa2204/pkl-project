@@ -3,86 +3,45 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Models\Payment;
+use App\Services\MidtransService;
+use App\Services\OrderLifecycleService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-    public function handlePayment(Request $request)
-    {
-        Log::info('Payment Payload', $request->all());
-
-        $request->validate([
-            'invoice_no' => 'required', 'string',
-            'transaction_id' => 'required', 'string',
-            'status' => 'required', 'string',
-            'gross_amount' => 'required', 'integer',
+    public function handlePayment(
+        Request $request,
+        MidtransService $midtrans,
+        OrderLifecycleService $lifecycle
+    ): JsonResponse {
+        $payload = $request->validate([
+            'order_id' => ['required', 'string', 'max:64'],
+            'transaction_status' => ['required', 'string', 'max:30'],
+            'transaction_id' => ['nullable', 'string', 'max:255'],
+            'status_code' => ['required', 'string', 'max:10'],
+            'gross_amount' => ['required', 'numeric'],
+            'signature_key' => ['required', 'string', 'size:128'],
+            'payment_type' => ['nullable', 'string', 'max:80'],
+            'fraud_status' => ['nullable', 'string', 'max:30'],
+            'bank' => ['nullable', 'string', 'max:50'],
+            'va_numbers' => ['nullable', 'array'],
+            'va_numbers.*.bank' => ['nullable', 'string', 'max:50'],
+            'va_numbers.*.va_number' => ['nullable', 'string', 'max:100'],
+            'permata_va_number' => ['nullable', 'string', 'max:100'],
+            'bill_key' => ['nullable', 'string', 'max:100'],
+            'biller_code' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $invoiceNo = $request->input('invoice_no');
-        $status = $request->input('status');
-        $txnId = $request->input('transaction_id');
-        
-        $order = Order::where('invoice_no', $invoiceNo)->first();
+        if (! $midtrans->hasValidSignature($payload)) {
+            Log::warning('Rejected Midtrans webhook with invalid signature', ['order_id' => $payload['order_id']]);
 
-        if (!$order){
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Order not found'
-            ], 404);
+            return response()->json(['message' => 'Invalid signature.'], 403);
         }
 
-        DB::beginTransaction();
-        try {
-            $now = Carbon::now();
-            $isPaid = in_array($status, ['success', 'pending']);
+        $order = $lifecycle->applyMidtransNotification($payload);
 
-            Payment::updateorCreate([
-                'order_id' => $order->id,
-                'provider_order_id' => $txnId,
-            ], [
-                'provider' => $request->input('provider', 'midtrans'),
-                'provider_order_id' => $request->input('provider_order_id', $invoiceNo),
-                'payment_type' => $request->input('payment_type', 'bank_transfer'),
-                'bank' => $request->input('bank', null),
-                'va_number' => $request->input('va_number'),
-                'status' => $status,
-                'gross_amount' => $request->input('gross_amount'),
-                'raw_response' => $request->all(),
-                'paid_at' => $isPaid ? $now : null,
-            ]);
-
-            if ($isPaid) {
-                $order->update([
-                    'payment_status' => 'paid',
-                    'status' => 'paid',
-                    'paid_at' => $now,
-                ]);
-            } elseif (in_array($status, ['cancel', 'deny', 'expire', 'failed'])) {
-                $order->update([
-                    'payment_status' => 'failed',
-                    'status' => 'cancelled',
-                ]);
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Payment success'
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to handle payment: ' . $e->getMessage());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to handle payment: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json(['message' => 'Notification processed.', 'order_no' => $order->order_no]);
     }
 }

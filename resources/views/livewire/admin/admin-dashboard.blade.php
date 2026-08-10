@@ -52,7 +52,7 @@
                     {{ number_format($totalItemsSold) }}
 
                     <span class="text-xs font-normal text-gray-500">
-                        Lembar
+                        LembarS
                     </span>
                 </h3>
             </div>

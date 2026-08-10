@@ -53,7 +53,7 @@ class UserAddress extends Model
 
     public function orders(): HasMany
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(Order::class, 'shipping_address_id');
     }
 
     public function shipments(): HasMany

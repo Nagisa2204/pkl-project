@@ -3,118 +3,80 @@
 namespace App\Livewire;
 
 use App\Models\Cart;
-use App\Models\CartItem;
-use Illuminate\Support\Facades\DB;
+use App\Services\CartService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class CartIndex extends Component
 {
     public array $selectedItems = [];
-    public ?int $selectedCategoryId = null;
     public int $grandTotal = 0;
     public int $totalItems = 0;
 
-    public function mount()
+    public function mount(): void
     {
         $this->calculateTotals();
     }
 
     public function getCartProperty(): ?Cart
     {
-        return Cart::with('cartItems.product.images', 'cartItems.product.category')
-            ->where('user_id', Auth::id())
-            ->first();
+        return Cart::with(['cartItems.variant.product.images', 'cartItems.variant.optionValues.option'])
+            ->where('user_id', Auth::id())->first();
     }
 
-    public function updatedSelectedItems()
+    public function updatedSelectedItems(): void
     {
         $this->calculateTotals();
     }
 
-    public function calculateTotals()
+    public function calculateTotals(): void
     {
-        $this->grandTotal = 0;
-        $this->totalItems = 0;
-        $this->selectedCategoryId = null;
-
-        if (empty($this->selectedItems)) {
-            session()->put('selected_cart_items', []);
-            return;
-        }
-
         $cart = $this->cart;
-        if (!$cart) return;
+        $valid = $cart?->cartItems->whereIn('id', array_map('intval', $this->selectedItems)) ?? collect();
+        $this->selectedItems = $valid->pluck('id')->map(fn ($id) => (string) $id)->all();
+        $this->grandTotal = $valid->sum(fn ($item) => $item->variant->price * $item->quantity);
+        $this->totalItems = $valid->sum('quantity');
+        session()->put('selected_cart_items', $this->selectedItems);
+    }
 
-        $selectedCartItems = $cart->cartItems->whereIn('id', $this->selectedItems);
+    public function incrementQuantity(int $itemId, CartService $cart): void
+    {
+        $item = $this->ownedItem($itemId);
+        $cart->setQuantity(Auth::user(), $itemId, $item->quantity + 1);
+        $this->afterCartChange();
+    }
 
-        if ($selectedCartItems->isNotEmpty()) {
-            $this->selectedCategoryId = $selectedCartItems->first()->product->category_id;
-
-            $validItems = $selectedCartItems->where('product.category_id', $this->selectedCategoryId);
-            
-            $this->selectedItems = $validItems->pluck('id')->map(fn($id) => (string) $id)->toArray();
-
-            foreach ($validItems as $item) {
-                $this->grandTotal += $item->product->price * $item->quantity;
-                $this->totalItems += $item->quantity;
-            }
-            
-            session()->put('selected_cart_items', $this->selectedItems);
-        } else {
-            session()->put('selected_cart_items', []);
+    public function decrementQuantity(int $itemId, CartService $cart): void
+    {
+        $item = $this->ownedItem($itemId);
+        $minimum = $item->variant->product->min_order_quantity;
+        if ($item->quantity > $minimum) {
+            $cart->setQuantity(Auth::user(), $itemId, $item->quantity - 1);
+            $this->afterCartChange();
         }
     }
 
-    public function incrementQuantity(int $itemId): void
+    public function removeItem(int $itemId, CartService $cart): void
     {
-        DB::transaction(function () use ($itemId) {
-            $cartItem = CartItem::findOrFail($itemId);
-            
-            $product = $cartItem->product()->lockForUpdate()->first();
-
-            if ($cartItem->quantity >= $product->stock_quantity) {
-                $this->dispatch('alert', type: 'warning', message: 'Product is out of stock');
-                return;
-            }
-            $cartItem->increment('quantity');
-        });
-
-        $this->dispatch('cartUpdated');
-        $this->calculateTotals(); 
-    }
-    
-    public function decrementQuantity(int $itemId): void
-    {
-        $cartItem = CartItem::findOrFail($itemId);
-
-        if ($cartItem->quantity <= 1) {
-            return;
-        }
-
-        $cartItem->decrement('quantity');
-
-        $this->dispatch('cartUpdated');
-        $this->calculateTotals();
+        $cart->remove(Auth::user(), $itemId);
+        $this->selectedItems = array_values(array_filter($this->selectedItems, fn ($id) => (int) $id !== $itemId));
+        $this->afterCartChange();
     }
 
-    public function removeItem(int $itemId): void
+    private function ownedItem(int $itemId)
     {
-        CartItem::findOrFail($itemId)->delete();
+        return $this->cart?->cartItems->firstWhere('id', $itemId) ?? abort(404);
+    }
 
-        if (($key = array_search($itemId, $this->selectedItems)) !== false) {
-            unset($this->selectedItems[$key]);
-        }
-
-        $this->dispatch('alert', type: 'success', message: 'Product removed from cart');
+    private function afterCartChange(): void
+    {
+        unset($this->cart);
         $this->dispatch('cartUpdated');
         $this->calculateTotals();
     }
 
     public function render()
     {
-        return view('livewire.cart-index', [
-            'cart' => $this->cart,
-        ]);
+        return view('livewire.cart-index', ['cart' => $this->cart]);
     }
 }

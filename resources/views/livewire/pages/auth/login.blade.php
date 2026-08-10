@@ -4,19 +4,32 @@ use App\Livewire\Forms\LoginForm;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use App\Rules\ValidTurnstile;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 new #[Layout('layouts.guest')] class extends Component
 {
     public LoginForm $form;
+    public string $turnstileToken = '';
 
     /**
      * Handle an incoming authentication request.
      */
     public function login(): void
     {
-        $this->validate();
+        $this->form->validate();
+        $this->validate([
+            'turnstileToken' => [Rule::requiredIf(config('turnstile.enabled')), new ValidTurnstile],
+        ]);
 
-        $this->form->authenticate();
+        try {
+            $this->form->authenticate();
+        } catch (ValidationException $exception) {
+            $this->reset('turnstileToken');
+            $this->dispatch('turnstile-reset');
+            throw $exception;
+        }
 
         Session::regenerate();
 
@@ -55,6 +68,8 @@ new #[Layout('layouts.guest')] class extends Component
                 <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
             </label>
         </div>
+
+        <div class="mt-4"><x-turnstile wire-model="turnstileToken" /></div>
 
         <div class="flex items-center justify-end mt-4">
             @if (Route::has('password.request'))

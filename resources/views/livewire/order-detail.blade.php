@@ -590,6 +590,12 @@
                                 </a>
                             @endif
 
+                            @if($order->payment_status === 'pending' && $payment->snap_token)
+                                <button type="button" onclick="window.snap.pay(@js($payment->snap_token), {onSuccess: () => window.location.reload(), onPending: () => window.location.reload(), onError: () => window.location.reload(), onClose: () => {}})" class="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-3 text-sm font-bold text-white">Bayar dengan Midtrans</button>
+                            @elseif($order->payment_status === 'pending')
+                                <button wire:click="retryPayment" class="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-3 text-sm font-bold text-white">Muat ulang pembayaran</button>
+                            @endif
+
                             @if($payment->va_number)
                                 <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
                                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">
@@ -686,12 +692,12 @@
                 </div>
             </div>
         </div>
+
+        <a href="{{ route('invoices.show', $order) }}" target="_blank" class="mt-5 block rounded-xl bg-slate-900 px-5 py-3 text-center font-bold text-white">Lihat / Cetak Invoice</a>
     </div>
 </div>
 
 @if(!$isPaid && $expiryAt)
-
-```
 <script>
     (() => {
 
@@ -773,4 +779,10 @@
 
     })();
 </script>
-```
+@endif
+
+@once
+    @push('scripts')
+        <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
+    @endpush
+@endonce

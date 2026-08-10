@@ -5,7 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ $storeSettings->store_name ?? config('app.name') }}</title>
+        @if($storeSettings?->favicon_path)<link rel="icon" href="{{ Storage::url($storeSettings->favicon_path) }}">@endif
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -31,6 +32,8 @@
             <main>
                 {{ $slot }}
             </main>
+            <footer class="border-t bg-white"><div class="mx-auto max-w-7xl px-4 py-8 text-sm text-slate-600"><strong class="text-slate-900">{{ $storeSettings->store_name }}</strong><p class="mt-1">{{ collect([$storeSettings->address, $storeSettings->city, $storeSettings->province])->filter()->implode(', ') }}</p><p>{{ $storeSettings->email }} {{ $storeSettings->whatsapp ? ' · '.$storeSettings->whatsapp : '' }}</p></div></footer>
         </div>
+        @stack('scripts')
     </body>
 </html>

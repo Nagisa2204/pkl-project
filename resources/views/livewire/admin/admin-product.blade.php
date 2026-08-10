@@ -44,23 +44,23 @@
                     </th>
                 </tr>
             </thead>
-            <tbody">
+            <tbody>
                 @forelse($products as $product)
                     <tr>
                         <td class="py-3 px-2 border-b border-gray-200">
                             {{ $product->name }}
                         </td>
                         <td class="py-3 px-2 border-b border-gray-200">
-                            {{ $product->sku }}
+                            {{ $product->defaultVariant?->sku ?? '-' }}
                         </td>
                         <td class="py-3 px-2 border-b border-gray-200">
                             {{ $product->category->name }}
                         </td>
                         <td class="py-3 px-2 border-b border-gray-200">
-                            Rp {{ number_format($product->price,0,',','.') }}
+                            Rp {{ number_format($product->activeVariants->min('price') ?? 0,0,',','.') }}
                         </td>
                         <td class="py-3 px-2 border-b border-gray-200">
-                            {{ $product->stock_quantity }}
+                            {{ $product->activeVariants->sum('stock_quantity') }}
                         </td>
                         <td class="py-3 px-2 border-b border-gray-200">
                             @if($product->is_active)

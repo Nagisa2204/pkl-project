@@ -25,11 +25,19 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  */
 
-#[Fillable(['order_id', 'product_id', 'product_name', 'sku', 'product_price', 'quantity', 'weight_grams', 'stock_status', 'subtotal'])]
+#[Fillable([
+    'order_id', 'product_id', 'product_variant_id', 'product_name', 'variant_name',
+    'variant_options', 'sku', 'product_price', 'quantity', 'weight_grams', 'stock_reserved', 'subtotal',
+])]
 class OrderItem extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
+    protected function casts(): array
+    {
+        return ['variant_options' => 'array', 'stock_reserved' => 'boolean'];
+    }
 
     public function order(): BelongsTo
     {
@@ -39,5 +47,10 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

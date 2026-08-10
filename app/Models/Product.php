@@ -2,45 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-
-/**
- * @property int $id
- * @property string $name
- * @property string $category_id
- * @property string $slug
- * @property string $sku
- * @property string $description
- * @property int $price
- * @property string $stock_status
- * @property int $stock_quantity
- * @property int $weight_grams
- * @property int $preorder_days
- * @property int $min_order_quantity
- * @property string $thumbnail
- * @property bool $is_active
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
- */
-#[Fillable(['category_id', 'name', 'description', 'price', 'slug', 'sku', 'stock_status', 'stock_quantity', 'weight_grams', 'preorder_days', 'min_order_quantity', 'thumbnail', 'is_active'])]
+#[Fillable(['category_id', 'name', 'slug', 'description', 'min_order_quantity', 'is_active'])]
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    /**
-     * Get the attributes that should be cast.
-     * 
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
+            'min_order_quantity' => 'integer',
             'is_active' => 'boolean',
         ];
     }
@@ -50,9 +28,37 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function options(): HasMany
+    {
+        return $this->hasMany(ProductOption::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class)->orderByDesc('is_default')->orderBy('id');
+    }
+
+    public function activeVariants(): HasMany
+    {
+        return $this->variants()->where('is_active', true);
+    }
+
+    public function defaultVariant(): HasOne
+    {
+        return $this->hasOne(ProductVariant::class)->where('is_default', true);
+    }
+
     public function images(): HasMany
     {
-        return $this->hasMany(ProductImage::class);
+        return $this->hasMany(ProductImage::class)
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    public function primaryImage(): HasOne
+    {
+        return $this->hasOne(ProductImage::class)->where('is_primary', true);
     }
 
     public function orderItems(): HasMany
@@ -60,8 +66,8 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function cartItems(): HasMany
+    public function scopeActive($query)
     {
-        return $this->hasMany(CartItem::class);
+        return $query->where('is_active', true);
     }
 }

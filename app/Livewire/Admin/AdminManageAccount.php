@@ -28,6 +28,11 @@ class AdminManageAccount extends Component
 
     protected $paginationTheme = 'tailwind';
 
+    public function mount(): void
+    {
+        $this->authorize('admin');
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -63,7 +68,7 @@ class AdminManageAccount extends Component
                 'email',
                 Rule::unique('users')->ignore($this->userId),
             ],
-            'role' => 'required|string',
+            'role' => ['required', Rule::in(['user', 'admin'])],
             'is_active' => 'boolean',
         ];
 
@@ -109,6 +114,7 @@ class AdminManageAccount extends Component
     public function deleteUser($id)
     {
         $user = User::findOrFail($id);
+        abort_if($user->id === auth()->id() || $user->orders()->exists(), 422, 'Akun tidak dapat dihapus.');
         $user->delete();
         
         session()->flash('success', 'Akun berhasil dihapus.');

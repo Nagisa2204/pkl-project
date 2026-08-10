@@ -4,7 +4,7 @@ use App\Models\User;
 use App\Models\UserAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Http;
+use App\Services\RajaOngkirService;
 use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
 
@@ -61,13 +61,8 @@ new class extends Component
      */
     public function fetchProvinces(): void
     {
-        $response = Http::withHeaders([
-            'key' => env('RAJAONGKIR_API_KEY')
-        ])->timeout(30)->get('https://rajaongkir.komerce.id/api/v1/destination/province');
-
-        if ($response->successful()) {
-            $this->provinces = $response->json()['data'] ?? [];
-        }
+        try { $this->provinces = app(RajaOngkirService::class)->provinces(); }
+        catch (\Throwable $exception) { report($exception); $this->provinces = []; $this->addError('address', 'Data wilayah tidak dapat dimuat.'); }
     }
 
     public function updatedSelectedProvinceId($value): void
@@ -75,15 +70,8 @@ new class extends Component
         $province = collect($this->provinces)->firstWhere('id', $value);
         $this->province_name = $province['name'] ?? '';
 
-        $response = Http::withHeaders([
-            'key' => env('RAJAONGKIR_API_KEY')
-        ])->timeout(30)->get("https://rajaongkir.komerce.id/api/v1/destination/city/{$value}");
-
-        if ($response->successful()) {
-            $this->cities = $response->json()['data'] ?? [];
-        } else {
-            $this->cities = [];
-        }
+        try { $this->cities = app(RajaOngkirService::class)->cities($value); }
+        catch (\Throwable $exception) { report($exception); $this->cities = []; }
 
         $this->selected_city_id = '';
         $this->city_name = '';
@@ -95,15 +83,8 @@ new class extends Component
         $city = collect($this->cities)->firstWhere('id', $value);
         $this->city_name = $city['name'] ?? '';
         
-        $response = Http::withHeaders([
-            'key' => env('RAJAONGKIR_API_KEY')
-        ])->timeout(30)->get("https://rajaongkir.komerce.id/api/v1/destination/district/{$value}");
-
-        if ($response->successful()) {
-            $this->districts = $response->json()['data'] ?? [];
-        } else {
-            $this->districts = [];
-        }
+        try { $this->districts = app(RajaOngkirService::class)->districts($value); }
+        catch (\Throwable $exception) { report($exception); $this->districts = []; }
 
         $this->selected_district_id = '';
         $this->district_name = '';
@@ -115,15 +96,8 @@ new class extends Component
         $district = collect($this->districts)->firstWhere('id', $value);
         $this->district_name = $district['name'] ?? '';
 
-        $response = Http::withHeaders([
-            'key' => env('RAJAONGKIR_API_KEY')
-        ])->timeout(30)->get("https://rajaongkir.komerce.id/api/v1/destination/sub-district/{$value}");
-
-        if ($response->successful()) {
-            $this->subdistricts = $response->json()['data'] ?? [];
-        } else {
-            $this->subdistricts = [];
-        }
+        try { $this->subdistricts = app(RajaOngkirService::class)->subdistricts($value); }
+        catch (\Throwable $exception) { report($exception); $this->subdistricts = []; }
 
         $this->selected_subdistrict_id = '';
         $this->postal_code = '';
@@ -156,7 +130,7 @@ new class extends Component
         $validatedUser = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
-            'phone' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
         ]);
 
         $validatedAddress = $this->validate([
@@ -165,7 +139,7 @@ new class extends Component
             'city_name' => ['required', 'string', 'max:255'],
             'district_name' => ['required', 'string', 'max:255'],
             'subdistrict_name' => ['required', 'string', 'max:255'],
-            'postal_code' => ['required', 'string', 'max:255'],
+            'postal_code' => ['required', 'string', 'max:20'],
             'destination_id' => ['required', 'integer'],
         ]);
 

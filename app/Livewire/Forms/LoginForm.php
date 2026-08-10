@@ -38,7 +38,17 @@ class LoginForm extends Form
             ]);
         }
 
+        if (! Auth::user()->is_active) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'form.email' => 'Akun tidak aktif. Hubungi administrator toko.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
+        Auth::user()->forceFill(['last_login_at' => now()])->save();
     }
 
     /**

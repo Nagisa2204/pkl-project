@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use App\Rules\ValidTurnstile;
+use Illuminate\Validation\Rule;
 
 new #[Layout('layouts.guest')] class extends Component
 {
@@ -14,6 +16,7 @@ new #[Layout('layouts.guest')] class extends Component
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public string $turnstileToken = '';
 
     /**
      * Handle an incoming registration request.
@@ -24,8 +27,10 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'turnstileToken' => [Rule::requiredIf(config('turnstile.enabled')), new ValidTurnstile],
         ]);
 
+        unset($validated['turnstileToken']);
         $validated['password'] = Hash::make($validated['password']);
 
         event(new Registered($user = User::create($validated)));
@@ -51,6 +56,8 @@ new #[Layout('layouts.guest')] class extends Component
             <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
+
+        <div class="mt-4"><x-turnstile wire-model="turnstileToken" /></div>
 
         <!-- Password -->
         <div class="mt-4">

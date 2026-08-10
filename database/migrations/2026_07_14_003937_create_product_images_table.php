@@ -15,9 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->string('image_path', 255);
-            $table->string('caption', 255)->nullable();
+            $table->string('alt_text', 255)->nullable();
+            $table->boolean('is_primary')->default(false);
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
+            $table->index(['product_id', 'sort_order']);
+            $table->index(['product_id', 'is_primary']);
         });
     }
 

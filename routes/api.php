@@ -9,5 +9,9 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('/payment', [PaymentController::class, 'handlePayment']);
-Route::post('/courier', [CourierController::class, 'handleCourier']);
+Route::post('/midtrans/webhook', [PaymentController::class, 'handlePayment'])
+    ->middleware('throttle:midtrans-webhook')
+    ->name('midtrans.webhook');
+
+Route::post('/courier', [CourierController::class, 'handleCourier'])
+    ->middleware(['auth:sanctum', 'can:admin', 'throttle:30,1']);
