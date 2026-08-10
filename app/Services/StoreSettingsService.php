@@ -13,9 +13,9 @@ class StoreSettingsService
      * Serializing a model into a persistent cache can produce an
      * __PHP_Incomplete_Class after a deployment or autoload change.
      */
-    private const CACHE_KEY = 'store.settings.attributes.v2';
+    private const CACHE_KEY = 'store.settings.attributes.v3';
 
-    private const LEGACY_CACHE_KEY = 'store.settings';
+    private const LEGACY_CACHE_KEYS = ['store.settings', 'store.settings.attributes.v2'];
 
     public function get(): StoreSetting
     {
@@ -36,7 +36,10 @@ class StoreSettingsService
     public function forget(): void
     {
         Cache::forget(self::CACHE_KEY);
-        Cache::forget(self::LEGACY_CACHE_KEY);
+
+        foreach (self::LEGACY_CACHE_KEYS as $key) {
+            Cache::forget($key);
+        }
     }
 
     private function getStoreSetting(): StoreSetting

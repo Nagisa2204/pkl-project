@@ -3,11 +3,13 @@
 namespace App\Livewire;
 
 use App\Models\Cart;
+use App\Models\UserAddress;
 use App\Services\CreateOrderService;
-use App\Services\RajaOngkirService;
+use App\Services\ShippingRateService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use RuntimeException;
 
 class Checkout extends Component
 {
@@ -16,21 +18,23 @@ class Checkout extends Component
     public ?int $shipping_address_id = null;
     public array $selected_cart_items = [];
     public bool $has_address = false;
-    public string $selected_bank = '';
-    public ?int $destination_id = null;
     public int $total_weight = 0;
     public string $courier = '';
     public array $services = [];
     public string $shipping_service = '';
     public ?int $shipping_cost = null;
+    public bool $orderCreated = false;
 
     protected function rules(): array
     {
         return [
             'buyer_name' => ['required', 'string', 'max:255'],
             'buyer_whatsapp' => ['required', 'string', 'max:30'],
-            'shipping_address_id' => ['required', 'integer'],
-            'selected_bank' => ['required', Rule::in(['bca_va', 'bni_va', 'bri_va', 'echannel', 'qris', 'all'])],
+            'shipping_address_id' => [
+                'required',
+                'integer',
+                Rule::exists('user_addresses', 'id')->where('user_id', Auth::id()),
+            ],
             'courier' => ['required', Rule::in(config('rajaongkir.default_couriers', []))],
             'shipping_service' => ['required', 'string', 'max:80'],
         ];
@@ -52,7 +56,6 @@ class Checkout extends Component
             ?? $user->userAddresses()->first();
         $this->has_address = $address !== null;
         $this->shipping_address_id = $address?->id;
-        $this->destination_id = $address?->destination_id;
         $this->calculateTotalWeight();
     }
 
@@ -72,8 +75,6 @@ class Checkout extends Component
 
     public function updatedShippingAddressId($value): void
     {
-        $address = Auth::user()->userAddresses()->find($value);
-        $this->destination_id = $address?->destination_id;
         $this->resetShipping();
     }
 
@@ -84,21 +85,23 @@ class Checkout extends Component
         ) ?? 0);
     }
 
-    public function updatedCourier(string $value, RajaOngkirService $shipping): void
+    public function updatedCourier(string $value, ShippingRateService $shipping): void
     {
         $this->shipping_cost = null;
         $this->shipping_service = '';
         $this->services = [];
 
-        if (! $value || ! $this->destination_id) {
+        $address = $this->selectedAddress();
+
+        if (! $value || ! $address) {
             return;
         }
 
         try {
-            $this->services = $shipping->rates($this->destination_id, max(1, $this->total_weight), $value);
+            $this->services = $shipping->rates($address, max(1, $this->total_weight), $value);
         } catch (\Throwable $exception) {
             report($exception);
-            $this->addError('courier', 'Layanan ongkir sedang tidak tersedia. Silakan coba lagi.');
+            $this->addError('shipping', $exception->getMessage());
         }
     }
 
@@ -108,35 +111,51 @@ class Checkout extends Component
         $this->shipping_cost = $rate ? (int) ($rate['cost'] ?? 0) : null;
     }
 
-    public function placeOrder(RajaOngkirService $shipping, CreateOrderService $orders): mixed
+    public function placeOrder(ShippingRateService $shipping, CreateOrderService $orders): mixed
     {
+        if ($this->orderCreated) {
+            return null;
+        }
+
         $this->validate();
 
-        if (! $this->destination_id || ! $this->cart?->cartItems->count()) {
+        $address = $this->selectedAddress();
+
+        if (! $address || ! $this->cart?->cartItems->count()) {
             $this->addError('cart', 'Keranjang atau alamat pengiriman tidak valid.');
             return null;
         }
 
         try {
-            $rate = $shipping->authoritativeRate(
-                $this->destination_id,
+            $quote = $shipping->authoritativeRate(
+                $address,
                 max(1, $this->total_weight),
                 $this->courier,
                 $this->shipping_service
             );
 
+            if ($this->shipping_cost === null || $quote->cost() !== $this->shipping_cost) {
+                $this->shipping_cost = $quote->cost();
+                $this->addError('shipping_service', 'Biaya pengiriman berubah. Periksa total terbaru, lalu lanjutkan kembali.');
+
+                return null;
+            }
+
             $order = $orders->create(
                 Auth::user(),
                 $this->selected_cart_items,
                 $this->shipping_address_id,
-                $rate,
+                $quote,
                 $this->courier,
-                $this->selected_bank,
                 $this->buyer_name,
                 $this->buyer_whatsapp
             );
         } catch (\Illuminate\Validation\ValidationException $exception) {
             throw $exception;
+        } catch (RuntimeException $exception) {
+            report($exception);
+            $this->addError('checkout', $exception->getMessage());
+            return null;
         } catch (\Throwable $exception) {
             report($exception);
             $this->addError('checkout', 'Pesanan belum dapat dibuat. Silakan coba kembali.');
@@ -144,9 +163,25 @@ class Checkout extends Component
         }
 
         session()->forget('selected_cart_items');
+        $this->orderCreated = true;
         $this->dispatch('cartUpdated');
 
-        return redirect()->route('orders.detail', $order->invoice_no);
+        $payment = $order->payments->firstWhere('provider', 'midtrans');
+        $redirectUrl = route('orders.detail', $order->invoice_no);
+
+        if (! $payment?->snap_token) {
+            session()->flash('error', 'Pesanan berhasil dibuat, tetapi pembayaran belum dapat dimuat. Silakan coba kembali dari detail pesanan.');
+
+            return redirect()->to($redirectUrl);
+        }
+
+        $this->dispatch(
+            'midtrans-snap-open',
+            token: $payment->snap_token,
+            redirectUrl: $redirectUrl,
+        );
+
+        return null;
     }
 
     private function resetShipping(): void
@@ -155,6 +190,15 @@ class Checkout extends Component
         $this->services = [];
         $this->shipping_service = '';
         $this->shipping_cost = null;
+    }
+
+    private function selectedAddress(): ?UserAddress
+    {
+        if (! $this->shipping_address_id) {
+            return null;
+        }
+
+        return Auth::user()->userAddresses()->find($this->shipping_address_id);
     }
 
     public function render()

@@ -9,6 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use App\Rules\ValidTurnstile;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Session;
 
 new #[Layout('layouts.guest')] class extends Component
 {
@@ -36,6 +37,7 @@ new #[Layout('layouts.guest')] class extends Component
         event(new Registered($user = User::create($validated)));
 
         Auth::login($user);
+        Session::flash('success', 'Akun berhasil dibuat. Selamat datang!');
 
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
@@ -45,7 +47,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="register">
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" value="Nama" />
             <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
@@ -73,7 +75,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Confirm Password -->
         <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+            <x-input-label for="password_confirmation" value="Konfirmasi password" />
 
             <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full"
                             type="password"
@@ -83,7 +85,7 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}" wire:navigate>
+            <a class="underline text-sm text-muted hover:text-content rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" href="{{ route('login') }}" wire:navigate>
                 {{ __('Already registered?') }}
             </a>
 

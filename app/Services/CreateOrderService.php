@@ -2,6 +2,12 @@
 
 namespace App\Services;
 
+use App\Data\ShippingQuote;
+use App\Enums\FulfillmentStatus;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Enums\ShipmentStatus;
+use App\Enums\StockStatus;
 use App\Jobs\SendOrderStatusEmail;
 use App\Models\Cart;
 use App\Models\CartItem;
@@ -24,20 +30,25 @@ class CreateOrderService
         User $user,
         array $cartItemIds,
         int $shippingAddressId,
-        array $shippingRate,
+        ShippingQuote $shippingQuote,
         string $courier,
-        string $paymentMethod,
         string $buyerName,
         string $buyerWhatsapp
     ): Order {
         $order = DB::transaction(function () use (
-            $user, $cartItemIds, $shippingAddressId, $shippingRate, $courier,
-            $paymentMethod, $buyerName, $buyerWhatsapp
+            $user, $cartItemIds, $shippingAddressId, $shippingQuote, $courier,
+            $buyerName, $buyerWhatsapp
         ) {
             $address = UserAddress::query()
                 ->whereBelongsTo($user)
                 ->lockForUpdate()
                 ->findOrFail($shippingAddressId);
+
+            if ((int) $address->destination_id !== $shippingQuote->destination->providerId) {
+                throw ValidationException::withMessages([
+                    'shipping_address_id' => 'Alamat tujuan berubah. Pilih ulang layanan pengiriman.',
+                ]);
+            }
 
             $cart = Cart::query()->whereBelongsTo($user)->lockForUpdate()->firstOrFail();
             $ids = collect($cartItemIds)->map(fn ($id) => (int) $id)->unique()->values();
@@ -69,7 +80,7 @@ class CreateOrderService
                     ]);
                 }
 
-                if ($variant->stock_status !== 'preorder') {
+                if ($variant->stock_status !== StockStatus::Preorder) {
                     $updated = $variant->newQuery()
                         ->whereKey($variant->id)
                         ->where('stock_quantity', '>=', $item->quantity)
@@ -96,12 +107,13 @@ class CreateOrderService
                     'product_price' => $variant->price,
                     'quantity' => $item->quantity,
                     'weight_grams' => $variant->weight_grams,
-                    'stock_reserved' => $variant->stock_status !== 'preorder',
+                    'stock_reserved' => $variant->stock_status !== StockStatus::Preorder,
                     'subtotal' => $lineSubtotal,
                 ];
             }
 
-            $shippingCost = (int) ($shippingRate['cost'] ?? 0);
+            $shippingRate = $shippingQuote->rate;
+            $shippingCost = $shippingQuote->cost();
             $orderNo = $this->uniqueNumber('ORD');
             $invoiceNo = $this->uniqueNumber('INV');
 
@@ -123,11 +135,11 @@ class CreateOrderService
                 'shipping_service_name' => (string) ($shippingRate['description'] ?? $shippingRate['service'] ?? ''),
                 'shipping_etd' => (string) ($shippingRate['etd'] ?? ''),
                 'total' => $subtotal + $shippingCost,
-                'payment_method' => $paymentMethod,
-                'status' => 'pending_payment',
-                'payment_status' => 'pending',
-                'delivery_status' => 'pending',
-                'fulfillment_status' => 'unfulfilled',
+                'payment_method' => 'midtrans_snap',
+                'status' => OrderStatus::PendingPayment,
+                'payment_status' => PaymentStatus::Pending,
+                'delivery_status' => ShipmentStatus::Pending,
+                'fulfillment_status' => FulfillmentStatus::Unfulfilled,
                 'stock_reserved_at' => now(),
             ]);
 
@@ -145,6 +157,9 @@ class CreateOrderService
                 'subdistrict_name' => $address->subdistrict_name,
                 'postal_code' => $address->postal_code,
                 'courier_note' => $address->courier_note,
+                'origin_id' => $shippingQuote->origin->providerId,
+                'origin_label' => $shippingQuote->origin->label,
+                'origin_address' => $shippingQuote->origin->address,
                 'destination_id' => $address->destination_id,
                 'destination_label' => $address->destination_label,
                 'courier_code' => $courier,
@@ -153,17 +168,17 @@ class CreateOrderService
                 'service_name' => (string) ($shippingRate['description'] ?? $shippingRate['service'] ?? ''),
                 'cost' => $shippingCost,
                 'etd' => (string) ($shippingRate['etd'] ?? ''),
-                'status' => 'pending',
-                'raw_response' => $shippingRate,
+                'status' => ShipmentStatus::Pending,
+                'raw_response' => $shippingQuote->rawResponse(),
             ]);
 
             Payment::create([
                 'order_id' => $order->id,
                 'provider' => 'midtrans',
                 'provider_order_id' => $orderNo,
-                'payment_type' => $paymentMethod,
-                'bank' => $paymentMethod,
-                'status' => 'pending',
+                'payment_type' => 'midtrans_snap',
+                'bank' => null,
+                'status' => PaymentStatus::Pending->value,
                 'gross_amount' => $order->total,
                 'expiry_at' => now()->addMinutes(config('midtrans.expiry_minutes', 60)),
             ]);

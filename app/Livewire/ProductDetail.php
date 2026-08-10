@@ -57,15 +57,18 @@ class ProductDetail extends Component
         abort_unless($this->product->activeVariants->contains('id', $this->selectedVariantId), 422);
         $cart->add(Auth::user(), $this->selectedVariantId, $this->quantity);
         $this->dispatch('cartUpdated');
-        $this->dispatch('alert', type: 'success', message: 'Produk ditambahkan ke keranjang.');
+        $this->dispatch('toast', variant: 'success', message: 'Produk ditambahkan ke keranjang.');
 
         return null;
     }
 
     public function render()
     {
+        $selectedVariant = $this->product->activeVariants->firstWhere('id', $this->selectedVariantId);
+        $selectedVariant?->setRelation('product', $this->product);
+
         return view('livewire.product-detail', [
-            'selectedVariant' => $this->product->activeVariants->firstWhere('id', $this->selectedVariantId),
+            'selectedVariant' => $selectedVariant,
         ]);
     }
 }

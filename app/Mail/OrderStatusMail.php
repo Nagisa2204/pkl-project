@@ -22,7 +22,7 @@ class OrderStatusMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: "Update pesanan {$this->order->order_no} - {$this->store->store_name}");
+        return new Envelope(subject: "Pembaruan pesanan {$this->order->order_no} - {$this->store->store_name}");
     }
 
     public function content(): Content

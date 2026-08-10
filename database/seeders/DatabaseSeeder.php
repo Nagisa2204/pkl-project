@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\StockStatus;
 use App\Models\Category;
 use App\Models\User;
 use App\Models\Product;
@@ -63,7 +64,7 @@ class DatabaseSeeder extends Seeder
                 'combination_key' => (string) $value->id,
                 'price' => $price,
                 'stock_quantity' => 25,
-                'stock_status' => 'available',
+                'stock_status' => StockStatus::Available,
                 'weight_grams' => 1800,
                 'is_default' => $index === 0,
                 'is_active' => true,

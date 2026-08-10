@@ -38,6 +38,7 @@ class AdminProduct extends Component
         $this->authorize('admin');
         Product::findOrFail($id)->delete();
         session()->flash('success', 'Product deleted successfully.');
+        $this->dispatch('toast', variant: 'success', message: 'Produk berhasil dihapus.');
     }
 
     public function toogleStatus($id)
@@ -47,6 +48,7 @@ class AdminProduct extends Component
         $product->update([
             'is_active' => !$product->is_active
         ]);
+        $this->dispatch('toast', variant: 'success', message: 'Status produk berhasil diperbarui.');
     }
 
     public function render()

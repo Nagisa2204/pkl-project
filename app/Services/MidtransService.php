@@ -13,9 +13,14 @@ class MidtransService
     {
         $this->configure();
 
+        return Snap::getSnapToken($this->buildSnapPayload($order));
+    }
+
+    public function buildSnapPayload(Order $order): array
+    {
         $order->loadMissing('items');
 
-        $params = [
+        return [
             'transaction_details' => [
                 'order_id' => $order->order_no,
                 'gross_amount' => $order->total,
@@ -47,12 +52,6 @@ class MidtransService
                 'duration' => config('midtrans.expiry_minutes', 60),
             ],
         ];
-
-        if ($order->payment_method !== 'all') {
-            $params['enabled_payments'] = [$order->payment_method];
-        }
-
-        return Snap::getSnapToken($params);
     }
 
     public function hasValidSignature(array $payload): bool

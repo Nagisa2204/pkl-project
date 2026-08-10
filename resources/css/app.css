@@ -1,3 +1,303 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        /* Ubah nilai token berikut untuk mengganti tema seluruh aplikasi. */
+        --primary: 79 70 229;
+        --primary-hover: 67 56 202;
+        --primary-foreground: 255 255 255;
+        --secondary: 71 85 105;
+        --secondary-hover: 51 65 85;
+        --secondary-foreground: 255 255 255;
+        --success: 5 150 105;
+        --success-soft: 236 253 245;
+        --warning: 217 119 6;
+        --warning-soft: 255 251 235;
+        --info: 2 132 199;
+        --info-soft: 240 249 255;
+        --danger: 220 38 38;
+        --danger-hover: 185 28 28;
+        --danger-soft: 254 242 242;
+        --light: 248 250 252;
+        --dark: 15 23 42;
+        --canvas: 248 250 252;
+        --surface: 255 255 255;
+        --subtle: 241 245 249;
+        --content: 15 23 42;
+        --muted: 100 116 139;
+        --muted-foreground: 71 85 105;
+        --border: 226 232 240;
+        --focus: 99 102 241;
+        --overlay: 15 23 42;
+
+        --space-1: .25rem;
+        --space-2: .5rem;
+        --space-3: .75rem;
+        --space-4: 1rem;
+        --space-5: 1.25rem;
+        --space-6: 1.5rem;
+        --space-8: 2rem;
+        --radius-sm: .375rem;
+        --radius-md: .625rem;
+        --radius-lg: .875rem;
+        --radius-xl: 1.125rem;
+        --shadow-sm: 0 1px 2px rgb(var(--overlay) / .05), 0 1px 3px rgb(var(--overlay) / .08);
+        --shadow-md: 0 10px 30px rgb(var(--overlay) / .10);
+        --transition-fast: 150ms ease;
+    }
+
+    html {
+        color-scheme: light;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    body {
+        @apply bg-canvas text-content antialiased;
+    }
+
+    :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+        outline: 2px solid rgb(var(--focus));
+        outline-offset: 2px;
+    }
+
+    :where(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+        @apply rounded-ui border-default bg-surface text-content placeholder:text-muted;
+        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    :where(input:not([type='checkbox']):not([type='radio']), select, textarea):focus {
+        @apply border-primary ring-primary;
+    }
+
+    :where(input, select, textarea):disabled {
+        @apply cursor-not-allowed bg-subtle text-muted opacity-70;
+    }
+
+    :where(input[type='checkbox'], input[type='radio']) {
+        @apply border-default text-primary focus:ring-primary;
+    }
+
+    table {
+        @apply text-content;
+    }
+}
+
+@layer components {
+    .ui-page {
+        @apply mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8;
+    }
+
+    .ui-card {
+        @apply rounded-ui-lg border border-default bg-surface shadow-ui;
+    }
+
+    .ui-card-header {
+        @apply border-b border-default px-5 py-4 sm:px-6;
+    }
+
+    .ui-card-body {
+        @apply p-5 sm:p-6;
+    }
+
+    .ui-card-footer {
+        @apply border-t border-default px-5 py-4 sm:px-6;
+    }
+
+    .ui-btn {
+        @apply inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-ui px-4 py-2 text-sm font-semibold no-underline;
+        transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .ui-btn:active:not(:disabled) {
+        transform: translateY(1px);
+    }
+
+    .ui-btn:disabled,
+    .ui-btn[aria-disabled='true'] {
+        @apply cursor-not-allowed opacity-50;
+    }
+
+    .ui-btn-primary {
+        @apply bg-primary text-primary-foreground hover:bg-primary-hover;
+    }
+
+    .ui-btn-secondary {
+        @apply bg-secondary text-secondary-foreground hover:bg-secondary-hover;
+    }
+
+    .ui-btn-outline {
+        @apply border border-default bg-surface text-content hover:bg-subtle;
+    }
+
+    .ui-btn-ghost {
+        @apply text-primary hover:bg-info-soft;
+    }
+
+    .ui-btn-success {
+        @apply bg-success text-primary-foreground hover:opacity-90;
+    }
+
+    .ui-btn-warning {
+        @apply bg-warning text-primary-foreground hover:opacity-90;
+    }
+
+    .ui-btn-danger {
+        @apply bg-danger text-primary-foreground hover:bg-danger-hover;
+    }
+
+    .ui-field-label {
+        @apply mb-1.5 block text-sm font-semibold text-muted-foreground;
+    }
+
+    .ui-field {
+        @apply min-h-10 w-full rounded-ui border-default bg-surface text-content placeholder:text-muted;
+    }
+
+    .ui-field-error {
+        @apply mt-1.5 text-sm text-danger;
+    }
+
+    .ui-badge {
+        @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+    }
+
+    .ui-badge-primary { @apply bg-info-soft text-primary; }
+    .ui-badge-secondary { @apply bg-subtle text-secondary; }
+    .ui-badge-success { @apply bg-success-soft text-success; }
+    .ui-badge-warning { @apply bg-warning-soft text-warning; }
+    .ui-badge-danger { @apply bg-danger-soft text-danger; }
+    .ui-badge-info { @apply bg-info-soft text-info; }
+
+    .ui-alert {
+        @apply rounded-ui border px-4 py-3 text-sm;
+    }
+
+    .ui-alert-success { @apply border-success/20 bg-success-soft text-success; }
+    .ui-alert-warning { @apply border-warning/20 bg-warning-soft text-warning; }
+    .ui-alert-danger { @apply border-danger/20 bg-danger-soft text-danger; }
+    .ui-alert-info { @apply border-info/20 bg-info-soft text-info; }
+
+    .ui-table-wrap {
+        @apply w-full overflow-x-auto overscroll-x-contain rounded-ui-lg border border-default bg-surface;
+        scrollbar-gutter: stable;
+    }
+
+    .ui-table {
+        @apply min-w-full border-collapse text-left text-sm;
+    }
+
+    .ui-table thead {
+        @apply bg-subtle text-xs uppercase tracking-wide text-muted-foreground;
+    }
+
+    .ui-table th,
+    .ui-table td {
+        @apply border-b border-default px-4 py-3 align-middle;
+    }
+
+    .ui-table th {
+        @apply whitespace-nowrap font-bold;
+    }
+
+    .ui-table tbody tr:last-child td {
+        @apply border-b-0;
+    }
+
+    .ui-table tbody tr {
+        @apply hover:bg-subtle/60;
+    }
+
+    .ui-table-actions {
+        @apply flex flex-wrap items-center justify-end gap-2;
+    }
+
+    .ui-form-actions {
+        @apply flex flex-col-reverse gap-3 border-t border-default pt-5 sm:flex-row sm:items-center sm:justify-end;
+    }
+
+    .ui-empty-state {
+        @apply rounded-ui-lg border-2 border-dashed border-default bg-surface px-5 py-14 text-center text-muted;
+    }
+
+    .ui-modal-panel {
+        @apply overflow-hidden rounded-ui-lg border border-default bg-surface shadow-ui-lg;
+    }
+
+    .ui-modal-overlay {
+        background-color: rgb(var(--overlay) / .65);
+    }
+
+    .ui-toast-region {
+        @apply pointer-events-none fixed inset-x-4 top-4 z-[100] flex flex-col items-end gap-3 sm:left-auto sm:w-96;
+    }
+
+    .ui-toast {
+        @apply pointer-events-auto flex w-full items-start gap-3 rounded-ui-lg border bg-surface p-4 text-sm shadow-ui-lg;
+    }
+
+    .ui-toast-success { @apply border-success/30 text-success; }
+    .ui-toast-warning { @apply border-warning/30 text-warning; }
+    .ui-toast-danger { @apply border-danger/30 text-danger; }
+    .ui-toast-info { @apply border-info/30 text-info; }
+
+    .ui-search-select {
+        @apply relative w-full;
+    }
+
+    .ui-search-select-trigger {
+        @apply flex min-h-10 w-full items-center justify-between gap-2 rounded-ui border border-default bg-surface px-3 py-2 text-left text-sm text-content hover:border-primary;
+    }
+
+    .ui-search-select-trigger[aria-invalid='true'] {
+        @apply border-danger;
+    }
+
+    .ui-search-select-panel {
+        @apply absolute z-40 mt-2 w-full overflow-hidden rounded-ui border border-default bg-surface shadow-ui-lg;
+    }
+
+    .ui-search-select-option {
+        @apply flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm text-content hover:bg-subtle;
+    }
+
+    .ui-search-select-option[aria-selected='true'] {
+        @apply bg-info-soft font-semibold text-primary;
+    }
+
+    .ui-product-card {
+        @apply flex h-full flex-col overflow-hidden rounded-ui-lg border border-default bg-surface shadow-ui;
+        transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .ui-product-card:hover {
+        @apply border-primary/30 shadow-ui-lg;
+        transform: translateY(-2px);
+    }
+
+    .ui-skeleton {
+        @apply animate-pulse rounded-ui bg-subtle;
+    }
+
+}
+
+#nprogress .bar {
+    background-color: rgb(var(--primary)) !important;
+}
+
+#nprogress .peg {
+    box-shadow: 0 0 10px rgb(var(--primary)), 0 0 5px rgb(var(--primary)) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

@@ -9,18 +9,20 @@ test('store settings cache contains attributes instead of a serialized model', f
 
     expect($settings)->toBeInstanceOf(StoreSetting::class)
         ->and($settings->exists)->toBeTrue()
-        ->and(Cache::get('store.settings.attributes.v2'))->toBeArray()
-        ->and(Cache::get('store.settings.attributes.v2'))->not->toBeInstanceOf(StoreSetting::class);
+        ->and(Cache::get('store.settings.attributes.v3'))->toBeArray()
+        ->and(Cache::get('store.settings.attributes.v3'))->not->toBeInstanceOf(StoreSetting::class);
 });
 
 test('forget removes both the current and legacy store settings cache', function () {
     Cache::forever('store.settings', unserialize('O:19:"MissingStoreSetting":0:{}'));
+    Cache::forever('store.settings.attributes.v2', ['store_name' => 'Legacy Store']);
     app(StoreSettingsService::class)->get();
 
     app(StoreSettingsService::class)->forget();
 
     expect(Cache::has('store.settings'))->toBeFalse()
-        ->and(Cache::has('store.settings.attributes.v2'))->toBeFalse();
+        ->and(Cache::has('store.settings.attributes.v2'))->toBeFalse()
+        ->and(Cache::has('store.settings.attributes.v3'))->toBeFalse();
 });
 
 test('store settings are refreshed after the cache is forgotten', function () {

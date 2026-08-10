@@ -14,8 +14,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-sans antialiased bg-gray-100">
-        <div class="flex min-h-screen">
+    <body class="bg-canvas font-sans antialiased">
+        <div class="flex min-h-screen flex-col lg:flex-row">
 
             {{-- Sidebar --}}
             <livewire:layout.sidebar />
@@ -24,11 +24,12 @@
             <div class="flex flex-1 flex-col">
 
                 {{-- Page Content --}}
-                <main class="flex-1 p-6">
+                <main class="min-w-0 flex-1 p-4 sm:p-6">
                     {{ $slot }}
                 </main>
             </div>
         </div>
+        <x-ui.toast />
         @stack('scripts')
     </body>
 </html>

@@ -17,9 +17,10 @@ use App\Livewire\CartIndex;
 use App\Livewire\Checkout;
 use App\Livewire\OrderHistory;
 use App\Livewire\OrderDetail;
+use App\Livewire\Welcome;
 use App\Http\Controllers\InvoiceController;
 
-Route::view('/', 'livewire.welcome' );
+Route::get('/', Welcome::class)->name('home');
 
 Route::get('/products', ProductList::class)
      ->name('product.index');
