@@ -11,15 +11,27 @@
         <div class="grid gap-4 md:grid-cols-[minmax(240px,1fr)_280px]">
             <div>
                 <label class="ui-field-label" for="admin-product-search">Cari produk</label>
-                <input id="admin-product-search" wire:model.live.debounce.300ms="search" type="search" class="ui-field" placeholder="Nama produk">
+                <input id="admin-product-search" wire:model.live.debounce.300ms="search" type="search" class="ui-field"
+                    placeholder="Nama produk">
             </div>
-            <x-ui.searchable-select wire:model.live="selectedCategory" :options="$categories" label="Kategori" placeholder="Semua kategori" search-placeholder="Cari kategori..." />
+            <x-ui.searchable-select wire:model.live="selectedCategory" :options="$categories" label="Kategori"
+                placeholder="Semua kategori" search-placeholder="Cari kategori..." />
         </div>
     </x-ui.card>
 
     <div class="ui-table-wrap">
-        <table class="ui-table min-w-[880px]">
-            <thead><tr><th>Produk</th><th>SKU default</th><th>Kategori</th><th>Harga mulai</th><th>Stok</th><th>Status</th><th class="text-right">Aksi</th></tr></thead>
+        <table class="ui-table">
+            <thead>
+                <tr>
+                    <th>Produk</th>
+                    <th>SKU default</th>
+                    <th>Kategori</th>
+                    <th>Harga mulai</th>
+                    <th>Stok</th>
+                    <th>Status</th>
+                    <th class="text-right">Aksi</th>
+                </tr>
+            </thead>
             <tbody>
                 @forelse($products as $product)
                     <tr wire:key="admin-product-{{ $product->id }}">
@@ -28,11 +40,17 @@
                         <td>{{ $product->category->name }}</td>
                         <td>Rp {{ number_format($product->activeVariants->min('price') ?? 0, 0, ',', '.') }}</td>
                         <td>{{ $product->activeVariants->sum('stock_quantity') }}</td>
-                        <td><x-ui.badge :variant="$product->is_active ? 'success' : 'danger'">{{ $product->is_active ? 'Aktif' : 'Nonaktif' }}</x-ui.badge></td>
-                        <td><div class="ui-table-actions"><x-ui.button :href="route('admin.products.manage', $product->id)" variant="secondary" size="sm">Kelola</x-ui.button></div></td>
+                        <td><x-ui.badge :variant="$product->is_active ? 'success' : 'danger'">{{ $product->is_active ? 'Aktif' : 'Nonaktif' }}</x-ui.badge>
+                        </td>
+                        <td>
+                            <div class="ui-table-actions"><x-ui.button :href="route('admin.products.manage', $product->id)" variant="secondary"
+                                    size="sm">Kelola</x-ui.button></div>
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="py-10 text-center text-muted">Produk tidak ditemukan.</td></tr>
+                    <tr>
+                        <td colspan="7" class="py-10 text-center text-muted">Produk tidak ditemukan.</td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>

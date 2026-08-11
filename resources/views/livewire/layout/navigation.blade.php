@@ -128,7 +128,7 @@ new class extends Component {
 
                             @can('admin')
                                 <x-dropdown-link :href="route('admin.home')" :active="request()->routeIs('admin.*')" wire:navigate>
-                                    {{ __('Grafik (Admin)') }}
+                                    Dashboard Admin
                                 </x-dropdown-link>
                             @endcan
 
@@ -188,7 +188,7 @@ new class extends Component {
 
                     @can('admin')
                         <x-responsive-nav-link :href="route('admin.home')" :active="request()->routeIs('admin.*')" wire:navigate>
-                            {{ __('Admin Dashboard') }}
+                            Dashboard Admin
                         </x-responsive-nav-link>
                     @endcan
 

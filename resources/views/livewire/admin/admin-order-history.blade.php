@@ -8,20 +8,16 @@
         <div class="grid gap-4 md:grid-cols-[minmax(240px,1fr)_280px]">
             <div>
                 <label class="ui-field-label" for="order-search">Cari pesanan</label>
-                <input id="order-search" wire:model.live.debounce.300ms="search" class="ui-field" placeholder="Nomor invoice atau nama pelanggan">
+                <input id="order-search" wire:model.live.debounce.300ms="search" class="ui-field"
+                    placeholder="Nomor invoice atau nama pelanggan">
             </div>
-            <x-ui.searchable-select
-                wire:model.live="status"
-                :options="\App\Enums\OrderStatus::options()"
-                label="Status pesanan"
-                placeholder="Semua status"
-                search-placeholder="Cari status..."
-            />
+            <x-ui.searchable-select wire:model.live="status" :options="\App\Enums\OrderStatus::options()" label="Status pesanan"
+                placeholder="Semua status" search-placeholder="Cari status..." />
         </div>
     </x-ui.card>
 
     <div class="ui-table-wrap">
-        <table class="ui-table min-w-[880px]">
+        <table class="ui-table">
             <thead>
                 <tr>
                     <th>No. Pesanan</th>
@@ -47,7 +43,9 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="py-10 text-center text-muted">Pesanan belum tersedia.</td></tr>
+                    <tr>
+                        <td colspan="6" class="py-10 text-center text-muted">Pesanan belum tersedia.</td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>

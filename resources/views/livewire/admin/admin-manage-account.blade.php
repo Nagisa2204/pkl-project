@@ -5,15 +5,18 @@
     </div>
 
     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <input type="search" wire:model.live.debounce.300ms="search" placeholder="Cari nama atau email..." class="ui-field w-full sm:w-80">
+        <input type="search" wire:model.live.debounce.300ms="search" placeholder="Cari nama atau email..."
+            class="ui-field w-full sm:w-80">
         <x-ui.button wire:click="create" variant="success">Tambah Pengguna</x-ui.button>
     </div>
 
-    @if($isModalOpen)
-        <div class="ui-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="account-modal-title">
+    @if ($isModalOpen)
+        <div class="ui-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog"
+            aria-modal="true" aria-labelledby="account-modal-title">
             <div class="ui-modal-panel w-full max-w-lg">
                 <div class="ui-card-header">
-                    <h2 id="account-modal-title" class="text-lg font-bold text-content">{{ $isEditMode ? 'Edit Pengguna' : 'Tambah Pengguna' }}</h2>
+                    <h2 id="account-modal-title" class="text-lg font-bold text-content">
+                        {{ $isEditMode ? 'Edit Pengguna' : 'Tambah Pengguna' }}</h2>
                 </div>
                 <form wire:submit="store" class="ui-card-body space-y-4">
                     <div>
@@ -29,7 +32,9 @@
                     <div>
                         <label class="ui-field-label" for="account-password">Password</label>
                         <input id="account-password" type="password" wire:model="password" class="ui-field">
-                        @if($isEditMode)<p class="mt-1 text-xs text-muted">Kosongkan jika password tidak diubah.</p>@endif
+                        @if ($isEditMode)
+                            <p class="mt-1 text-xs text-muted">Kosongkan jika password tidak diubah.</p>
+                        @endif
                         <x-input-error :messages="$errors->get('password')" />
                     </div>
                     <div>
@@ -59,7 +64,7 @@
     @endif
 
     <div class="ui-table-wrap">
-        <table class="ui-table min-w-[860px]">
+        <table class="ui-table">
             <thead>
                 <tr>
                     <th>Nama</th>
@@ -79,19 +84,26 @@
                         <td>
                             <div class="flex items-center gap-2">
                                 <x-ui.badge :variant="$user->is_active ? 'success' : 'danger'">{{ $user->is_active ? 'Aktif' : 'Nonaktif' }}</x-ui.badge>
-                                <x-ui.button wire:click="toggleActive({{ $user->id }})" variant="ghost" size="sm">{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}</x-ui.button>
+                                <x-ui.button wire:click="toggleActive({{ $user->id }})" variant="ghost"
+                                    size="sm">{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}</x-ui.button>
                             </div>
                         </td>
                         <td>{{ $user->created_at->format('d M Y') }}</td>
                         <td>
                             <div class="ui-table-actions">
-                                <x-ui.button wire:click="edit({{ $user->id }})" variant="secondary" size="sm">Edit</x-ui.button>
-                                <x-ui.confirm-action action="deleteUser({{ $user->id }})" title="Hapus pengguna" message="Akun {{ $user->name }} akan dihapus jika tidak memiliki transaksi." confirm-label="Hapus" button-variant="danger" size="sm">Hapus</x-ui.confirm-action>
+                                <x-ui.button wire:click="edit({{ $user->id }})" variant="secondary"
+                                    size="sm">Edit</x-ui.button>
+                                <x-ui.confirm-action action="deleteUser({{ $user->id }})" title="Hapus pengguna"
+                                    message="Akun {{ $user->name }} akan dihapus jika tidak memiliki transaksi."
+                                    confirm-label="Hapus" button-variant="danger"
+                                    size="sm">Hapus</x-ui.confirm-action>
                             </div>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="py-10 text-center text-muted">Tidak ada data pengguna.</td></tr>
+                    <tr>
+                        <td colspan="6" class="py-10 text-center text-muted">Tidak ada data pengguna.</td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
