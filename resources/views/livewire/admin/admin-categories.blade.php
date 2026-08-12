@@ -1,8 +1,59 @@
-<div class="grid gap-6 lg:grid-cols-[360px_1fr]">
-    <section class="h-fit rounded-xl bg-white p-5 shadow-sm"><h1 class="text-xl font-bold">{{ $editingId ? 'Edit' : 'Tambah' }} Kategori</h1>
-        <div class="mt-4 space-y-3"><div><label class="text-sm">Nama</label><input wire:model.live="name" class="w-full rounded-lg border-slate-300"></div><div><label class="text-sm">Slug</label><input wire:model="slug" class="w-full rounded-lg border-slate-300"></div><div><label class="text-sm">Induk</label><select wire:model="parent_id" class="w-full rounded-lg border-slate-300"><option value="">Tanpa induk</option>@foreach($categories as $category) @if($category->id !== $editingId)<option value="{{ $category->id }}">{{ $category->name }}</option>@endif @endforeach</select></div><textarea wire:model="description" placeholder="Deskripsi" class="w-full rounded-lg border-slate-300"></textarea><label class="flex gap-2"><input type="checkbox" wire:model="is_active"> Aktif</label></div>
-        @if($errors->any())<div class="mt-3 text-sm text-red-600">{{ $errors->first() }}</div>@endif
-        <button wire:click="save" class="mt-4 rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white">Simpan</button>
-    </section>
-    <section class="rounded-xl bg-white p-5 shadow-sm"><h2 class="text-xl font-bold">Kategori Produk</h2>@if(session('success'))<div class="mt-3 rounded bg-emerald-50 p-3 text-emerald-700">{{ session('success') }}</div>@endif<table class="mt-4 w-full text-sm"><thead><tr class="border-b text-left"><th class="p-2">Nama</th><th>Induk</th><th>Produk</th><th>Status</th><th></th></tr></thead><tbody>@foreach($categories as $category)<tr class="border-b"><td class="p-2 font-semibold">{{ $category->name }}</td><td>{{ $category->parent?->name ?? '-' }}</td><td>{{ $category->products_count }}</td><td>{{ $category->is_active ? 'Aktif' : 'Nonaktif' }}</td><td class="space-x-2 text-right"><button wire:click="edit({{ $category->id }})" class="text-indigo-600">Edit</button>@if(!$category->is_protected && !$category->products_count)<button wire:click="delete({{ $category->id }})" wire:confirm="Hapus kategori?" class="text-red-600">Hapus</button>@endif</td></tr>@endforeach</tbody></table></section>
+<div class="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+    <x-ui.card class="h-fit">
+        <h1 class="text-xl font-bold text-content">{{ $editingId ? 'Edit' : 'Tambah' }} Kategori</h1>
+        <div class="mt-4 space-y-4">
+            <div>
+                <label class="ui-field-label" for="category-name">Nama</label>
+                <input id="category-name" wire:model.live="name" class="ui-field">
+            </div>
+            <div>
+                <label class="ui-field-label" for="category-slug">Slug</label>
+                <input id="category-slug" wire:model="slug" class="ui-field">
+            </div>
+            <x-ui.searchable-select wire:model="parent_id"
+                :options="$categories->where('id', '!=', $editingId)"
+                label="Kategori induk"
+                placeholder="Tanpa induk"
+                search-placeholder="Cari kategori..."
+            />
+            <div>
+                <label class="ui-field-label" for="category-description">Deskripsi</label>
+                <textarea id="category-description" wire:model="description" class="ui-field"></textarea>
+            </div>
+            <label class="flex items-center gap-2 text-sm font-medium text-content"><input type="checkbox" wire:model="is_active"> Aktif</label>
+        </div>
+        @if ($errors->any())
+<x-ui.alert variant="danger" class="mt-4">{{ $errors->first() }}</x-ui.alert>
+@endif
+        <x-ui.button wire:click="save" wire:loading.attr="disabled" wire:target="save" class="mt-4">Simpan kategori</x-ui.button>
+    </x-ui.card>
+
+    <x-ui.card :padding="false">
+        <div class="ui-card-header"><h2 class="text-xl font-bold text-content">Kategori Produk</h2></div>
+        <div class="ui-table-wrap rounded-none border-0">
+            <table class="ui-table">
+                <thead><tr><th>Nama</th><th>Induk</th><th>Produk</th><th>Status</th><th class="text-right">Aksi</th></tr></thead>
+                <tbody>
+                    @foreach ($categories as $category)
+<tr wire:key="category-row-{{ $category->id }}">
+                            <td class="font-semibold">{{ $category->name }}</td>
+                            <td>{{ $category->parent?->name ?? '-' }}</td>
+                            <td>{{ $category->products_count }}</td>
+                            <td><x-ui.badge :variant="$category->is_active ? 'success' : 'secondary'">{{ $category->is_active ? 'Aktif' : 'Nonaktif' }}</x-ui.badge></td>
+                <td>
+                    <div class="ui-table-actions"><x-ui.button wire:click="edit({{ $category->id }})"
+                            variant="secondary" size="sm">Edit</x-ui.button>
+                        @if (!$category->is_protected && !$category->products_count)
+                            <x-ui.confirm-action action="delete({{ $category->id }})" title="Hapus kategori"
+                                message="Kategori {{ $category->name }} akan dihapus." confirm-label="Hapus"
+                                button-variant="danger" size="sm">Hapus</x-ui.confirm-action>
+                        @endif
+                    </div>
+                </td>
+                </tr>
+                @endforeach
+                </tbody>
+                </table>
+        </div>
+    </x-ui.card>
 </div>

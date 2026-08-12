@@ -49,14 +49,19 @@ class AdminCategories extends Component
         Category::updateOrCreate(['id' => $this->editingId], $data);
         $this->resetForm();
         session()->flash('success', 'Kategori berhasil disimpan.');
+        $this->dispatch('toast', variant: 'success', message: 'Kategori berhasil disimpan.');
     }
 
     public function delete(int $id): void
     {
         $this->authorize('admin');
         $category = Category::withCount(['products', 'children'])->findOrFail($id);
-        abort_if($category->is_protected || $category->products_count || $category->children_count, 422, 'Kategori masih digunakan.');
+        if ($category->is_protected || $category->products_count || $category->children_count) {
+            $this->dispatch('toast', variant: 'warning', message: 'Kategori masih digunakan dan tidak dapat dihapus.');
+            return;
+        }
         $category->delete();
+        $this->dispatch('toast', variant: 'success', message: 'Kategori berhasil dihapus.');
     }
 
     private function resetForm(): void

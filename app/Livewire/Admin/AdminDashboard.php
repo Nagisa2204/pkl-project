@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Enums\PaymentStatus;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Order;
@@ -39,28 +40,26 @@ class AdminDashboard extends Component
         $this->totalRevenue = (float) Order::query()
             ->where(function ($query) {
                 $query->whereNotNull('paid_at')
-                    ->orWhere('payment_status', 'paid');
+                    ->orWhere('payment_status', PaymentStatus::Paid->value);
             })
             ->sum('total');
 
         $this->totalTransactions = Order::query()
             ->where(function ($query) {
                 $query->whereNotNull('paid_at')
-                    ->orWhere('payment_status', 'paid');
+                    ->orWhere('payment_status', PaymentStatus::Paid->value);
             })
-            ->get()
             ->count();
 
         $this->totalCustomers = User::query()
             ->where('role', 'user')
-            ->get()
             ->count();
 
         $this->totalItemsSold = (int) DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->where(function ($query) {
                 $query->whereNotNull('orders.paid_at')
-                    ->orWhere('orders.payment_status', 'paid');
+                    ->orWhere('orders.payment_status', PaymentStatus::Paid->value);
             })
             ->whereNull('order_items.deleted_at')
             ->sum('order_items.quantity');
@@ -82,7 +81,7 @@ class AdminDashboard extends Component
                     ->where('created_at', '>=', $startDate)
                     ->where(function ($query) {
                         $query->whereNotNull('paid_at')
-                            ->orWhere('payment_status', 'paid');
+                            ->orWhere('payment_status', PaymentStatus::Paid->value);
                     })
                     ->groupBy('date_group')
                     ->get();
@@ -113,7 +112,7 @@ class AdminDashboard extends Component
                     ->where('created_at', '>=', $startDate)
                     ->where(function ($query) {
                         $query->whereNotNull('paid_at')
-                            ->orWhere('payment_status', 'paid');
+                            ->orWhere('payment_status', PaymentStatus::Paid->value);
                     })
                     ->groupBy('date_group')
                     ->get();
@@ -146,7 +145,7 @@ class AdminDashboard extends Component
                     ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
                     ->where(function ($query) {
                         $query->whereNotNull('paid_at')
-                            ->orWhere('payment_status', 'paid');
+                            ->orWhere('payment_status', PaymentStatus::Paid->value);
                     })
                     ->groupBy('year', 'month')
                     ->get();

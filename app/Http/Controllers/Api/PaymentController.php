@@ -8,6 +8,7 @@ use App\Services\OrderLifecycleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class PaymentController extends Controller
 {
@@ -18,7 +19,9 @@ class PaymentController extends Controller
     ): JsonResponse {
         $payload = $request->validate([
             'order_id' => ['required', 'string', 'max:64'],
-            'transaction_status' => ['required', 'string', 'max:30'],
+            'transaction_status' => ['required', 'string', Rule::in([
+                'pending', 'settlement', 'capture', 'deny', 'cancel', 'expire', 'failure',
+            ])],
             'transaction_id' => ['nullable', 'string', 'max:255'],
             'status_code' => ['required', 'string', 'max:10'],
             'gross_amount' => ['required', 'numeric'],

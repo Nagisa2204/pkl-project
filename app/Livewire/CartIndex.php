@@ -61,6 +61,7 @@ class CartIndex extends Component
         $cart->remove(Auth::user(), $itemId);
         $this->selectedItems = array_values(array_filter($this->selectedItems, fn ($id) => (int) $id !== $itemId));
         $this->afterCartChange();
+        $this->dispatch('toast', variant: 'success', message: 'Produk dihapus dari keranjang.');
     }
 
     private function ownedItem(int $itemId)

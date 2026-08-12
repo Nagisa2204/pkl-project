@@ -97,6 +97,7 @@ class AdminManageAccount extends Component
         );
 
         session()->flash('success', $this->isEditMode ? 'Akun berhasil diperbarui.' : 'Akun berhasil ditambahkan.');
+        $this->dispatch('toast', variant: 'success', message: $this->isEditMode ? 'Akun berhasil diperbarui.' : 'Akun berhasil ditambahkan.');
         
         $this->closeModal();
     }
@@ -109,15 +110,20 @@ class AdminManageAccount extends Component
 
         $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
         session()->flash('success', "Akun {$user->name} berhasil {$status}.");
+        $this->dispatch('toast', variant: 'success', message: "Akun {$user->name} berhasil {$status}.");
     }
 
     public function deleteUser($id)
     {
         $user = User::findOrFail($id);
-        abort_if($user->id === auth()->id() || $user->orders()->exists(), 422, 'Akun tidak dapat dihapus.');
+        if ($user->id === auth()->id() || $user->orders()->exists()) {
+            $this->dispatch('toast', variant: 'warning', message: 'Akun tidak dapat dihapus karena sedang digunakan atau memiliki transaksi.');
+            return;
+        }
         $user->delete();
         
         session()->flash('success', 'Akun berhasil dihapus.');
+        $this->dispatch('toast', variant: 'success', message: 'Akun berhasil dihapus.');
     }
 
     public function closeModal()

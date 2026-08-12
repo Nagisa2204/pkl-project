@@ -94,7 +94,7 @@ return new class extends Migration
                 $table->string('order_no', 64)->nullable()->after('id');
                 $table->unsignedBigInteger('discount_total')->default(0)->after('subtotal');
                 $table->unsignedBigInteger('payment_fee')->default(0)->after('shipping_cost');
-                $table->string('payment_method', 80)->default('all')->after('total');
+                $table->string('payment_method', 80)->default('midtrans_snap')->after('total');
                 $table->timestamp('cancelled_at')->nullable();
                 $table->timestamp('completed_at')->nullable();
             });

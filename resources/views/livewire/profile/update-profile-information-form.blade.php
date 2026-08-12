@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Models\UserAddress;
+use App\Exceptions\RajaOngkirException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Services\RajaOngkirService;
@@ -61,8 +62,7 @@ new class extends Component
      */
     public function fetchProvinces(): void
     {
-        try { $this->provinces = app(RajaOngkirService::class)->provinces(); }
-        catch (\Throwable $exception) { report($exception); $this->provinces = []; $this->addError('address', 'Data wilayah tidak dapat dimuat.'); }
+        $this->provinces = $this->loadRegions(fn () => app(RajaOngkirService::class)->provinces());
     }
 
     public function updatedSelectedProvinceId($value): void
@@ -70,39 +70,54 @@ new class extends Component
         $province = collect($this->provinces)->firstWhere('id', $value);
         $this->province_name = $province['name'] ?? '';
 
-        try { $this->cities = app(RajaOngkirService::class)->cities($value); }
-        catch (\Throwable $exception) { report($exception); $this->cities = []; }
-
+        $this->cities = [];
+        $this->districts = [];
+        $this->subdistricts = [];
         $this->selected_city_id = '';
+        $this->selected_district_id = '';
+        $this->selected_subdistrict_id = '';
         $this->city_name = '';
+        $this->district_name = '';
+        $this->subdistrict_name = '';
+        $this->postal_code = '';
         $this->destination_id = null;
+
+        if (blank($value)) return;
+
+        $this->cities = $this->loadRegions(fn () => app(RajaOngkirService::class)->cities($value));
     }
 
     public function updatedSelectedCityId($value): void
     {
         $city = collect($this->cities)->firstWhere('id', $value);
         $this->city_name = $city['name'] ?? '';
-        
-        try { $this->districts = app(RajaOngkirService::class)->districts($value); }
-        catch (\Throwable $exception) { report($exception); $this->districts = []; }
-
+        $this->districts = [];
+        $this->subdistricts = [];
         $this->selected_district_id = '';
+        $this->selected_subdistrict_id = '';
         $this->district_name = '';
+        $this->subdistrict_name = '';
+        $this->postal_code = '';
         $this->destination_id = null;
+
+        if (blank($value)) return;
+
+        $this->districts = $this->loadRegions(fn () => app(RajaOngkirService::class)->districts($value));
     }
 
     public function updatedSelectedDistrictId($value): void
     {
         $district = collect($this->districts)->firstWhere('id', $value);
         $this->district_name = $district['name'] ?? '';
-
-        try { $this->subdistricts = app(RajaOngkirService::class)->subdistricts($value); }
-        catch (\Throwable $exception) { report($exception); $this->subdistricts = []; }
-
+        $this->subdistricts = [];
         $this->selected_subdistrict_id = '';
         $this->postal_code = '';
         $this->subdistrict_name = '';
         $this->destination_id = null;
+
+        if (blank($value)) return;
+
+        $this->subdistricts = $this->loadRegions(fn () => app(RajaOngkirService::class)->subdistricts($value));
     }
 
     public function updatedSelectedSubdistrictId($value): void
@@ -117,6 +132,24 @@ new class extends Component
             $this->subdistrict_name = '';
             $this->postal_code = '';
             $this->destination_id = null;
+        }
+    }
+
+    private function loadRegions(callable $loader): array
+    {
+        try {
+            $this->resetErrorBag('address');
+            $regions = $loader();
+
+            return is_array($regions) ? $regions : [];
+        } catch (\Throwable $exception) {
+            report($exception);
+            $message = $exception instanceof RajaOngkirException
+                ? $exception->getMessage()
+                : 'Data wilayah belum dapat dimuat. Silakan coba kembali atau periksa log aplikasi.';
+            $this->addError('address', $message);
+
+            return [];
         }
     }
 
@@ -167,19 +200,19 @@ new class extends Component
 
 <section>
     <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Profile & Address Information') }}
+        <h2 class="text-lg font-medium text-content">
+            Informasi Profil dan Alamat
         </h2>
 
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information, email address, and shipping address.") }}
+        <p class="mt-1 text-sm text-muted">
+            Perbarui informasi akun, email, dan alamat pengiriman Anda.
         </p>
     </header>
 
     <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" value="Nama" />
             <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
@@ -192,17 +225,15 @@ new class extends Component
 
             @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
                 <div>
-                    <p class="text-sm mt-2 text-gray-800">
-                        {{ __('Your email address is unverified.') }}
+                    <p class="text-sm mt-2 text-content">
+                        Alamat email Anda belum diverifikasi.
 
-                        <button wire:click.prevent="sendVerification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
+                        <x-ui.button wire:click.prevent="sendVerification" variant="ghost" size="sm">Kirim ulang email verifikasi</x-ui.button>
                     </p>
 
                     @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
+                        <p class="mt-2 font-medium text-sm text-success">
+                            Tautan verifikasi baru telah dikirim ke alamat email Anda.
                         </p>
                     @endif
                 </div>
@@ -211,75 +242,48 @@ new class extends Component
 
         <!-- Phone -->
         <div>
-            <x-input-label for="phone" :value="__('Phone Number')" />
+            <x-input-label for="phone" value="Nomor telepon" />
             <x-text-input wire:model="phone" id="phone" name="phone" type="text" class="mt-1 block w-full" autocomplete="tel" />
             <x-input-error class="mt-2" :messages="$errors->get('phone')" />
         </div>
 
-        <hr class="my-4 border-gray-200">
+        <hr class="my-4 border-default">
         
-        <h3 class="text-md font-medium text-gray-900">{{ __('Shipping Address') }}</h3>
+        <h3 class="text-md font-medium text-content">Alamat Pengiriman</h3>
+        <x-input-error :messages="$errors->get('address')" />
 
         <!-- Address Line -->
         <div>
-            <x-input-label for="address_line" :value="__('Address Line')" />
+            <x-input-label for="address_line" value="Alamat lengkap" />
             <x-text-input wire:model="address_line" id="address_line" name="address_line" type="text" class="mt-1 block w-full" required />
             <x-input-error class="mt-2" :messages="$errors->get('address_line')" />
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Dropdown Province (RajaOngkir) -->
             <div>
-                <x-input-label for="selected_province_id" :value="__('Province')" />
-                <select wire:model.live="selected_province_id" id="selected_province_id" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full" required>
-                    <option value="">-- Pilih Provinsi --</option>
-                    @foreach($provinces as $province)
-                        <option value="{{ $province['id'] }}">{{ $province['name'] }}</option>
-                    @endforeach
-                </select>
+                <x-ui.searchable-select wire:model.live="selected_province_id" :options="$provinces" label="Provinsi" placeholder="Pilih provinsi" search-placeholder="Cari provinsi..." :clearable="false" />
                 <x-input-error class="mt-2" :messages="$errors->get('province_name')" />
             </div>
 
-            <!-- Dropdown City (RajaOngkir) -->
             <div>
-                <x-input-label for="selected_city_id" :value="__('City / Kabupaten')" />
-                <select wire:model.live="selected_city_id" id="selected_city_id" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full" required @if(empty($cities)) disabled @endif>
-                    <option value="">-- Pilih Kota/Kabupaten --</option>
-                    @foreach($cities as $city)
-                        <option value="{{ $city['id'] }}">{{ $city['name'] }}</option>
-                    @endforeach
-                </select>
+                <x-ui.searchable-select wire:model.live="selected_city_id" :options="$cities" label="Kota/Kabupaten" placeholder="Pilih kota/kabupaten" search-placeholder="Cari kota/kabupaten..." :clearable="false" :disabled="empty($cities)" :instance-key="'profile-city-'.$selected_province_id" />
                 <x-input-error class="mt-2" :messages="$errors->get('city_name')" />
             </div>
 
-            <!-- Dropdown District (RajaOngkir Starter) -->
             <div>
-                <x-input-label for="selected_district_id" :value="__('District / Kecamatan')" />
-                <select wire:model.live="selected_district_id" id="selected_district_id" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full" required @if(empty($districts)) disabled @endif>
-                    <option value="">-- Pilih Kecamatan --</option>
-                    @foreach($districts as $district)
-                        <option value="{{ $district['id'] }}">{{ $district['name'] }}</option>
-                    @endforeach
-                </select>
+                <x-ui.searchable-select wire:model.live="selected_district_id" :options="$districts" label="Kecamatan" placeholder="Pilih kecamatan" search-placeholder="Cari kecamatan..." :clearable="false" :disabled="empty($districts)" :instance-key="'profile-district-'.$selected_city_id" />
                 <x-input-error class="mt-2" :messages="$errors->get('district_name')" />
             </div>
 
-            <!-- Dropdown Subdistrict (RajaOngkir Starter) -->
             <div>
-                <x-input-label for="selected_subdistrict_id" :value="__('Subdistrict / Kelurahan')" />
-                <select wire:model.live="selected_subdistrict_id" id="selected_subdistrict_id" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full" required @if(empty($subdistricts)) disabled @endif>
-                    <option value="">-- Pilih Kelurahan --</option>
-                    @foreach($subdistricts as $subdistrict)
-                        <option value="{{ $subdistrict['id'] }}">{{ $subdistrict['name'] }}</option>
-                    @endforeach
-                </select>
+                <x-ui.searchable-select wire:model.live="selected_subdistrict_id" :options="$subdistricts" label="Kelurahan/Desa" placeholder="Pilih kelurahan/desa" search-placeholder="Cari kelurahan/desa..." :clearable="false" :disabled="empty($subdistricts)" :instance-key="'profile-subdistrict-'.$selected_district_id" />
                 <x-input-error class="mt-2" :messages="$errors->get('subdistrict_name')" />
             </div>
 
             <!-- Postal Code -->
             <div>
-                <p class="text-sm text-gray-700 mt-2">
-                    {{ __('Postal Code:') }} <span class="font-medium">{{ $postal_code }}</span>
+                <p class="text-sm text-muted-foreground mt-2">
+                    Kode pos: <span class="font-medium">{{ $postal_code ?: '-' }}</span>
                 </p>
                 <x-input-error class="mt-2" :messages="$errors->get('postal_code')" />
             </div>
@@ -288,11 +292,11 @@ new class extends Component
         <!-- Destination ID (Hidden) -->
         <input type="hidden" wire:model="destination_id">
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+        <div class="ui-form-actions">
+            <x-ui.button type="submit">Simpan Perubahan</x-ui.button>
 
             <x-action-message class="me-3" on="profile-updated">
-                {{ __('Saved.') }}
+                Tersimpan.
             </x-action-message>
         </div>
     </form>

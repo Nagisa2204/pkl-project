@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StockStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,7 @@ class ProductVariant extends Model
             'preorder_days' => 'integer',
             'is_default' => 'boolean',
             'is_active' => 'boolean',
+            'stock_status' => StockStatus::class,
         ];
     }
 
@@ -68,8 +70,8 @@ class ProductVariant extends Model
             return false;
         }
 
-        return $this->stock_status === 'preorder'
-            || ($this->stock_status === 'available' && $this->stock_quantity >= $quantity);
+        return $this->stock_status === StockStatus::Preorder
+            || ($this->stock_status === StockStatus::Available && $this->stock_quantity >= $quantity);
     }
 
     public function displayName(): string
@@ -78,6 +80,6 @@ class ProductVariant extends Model
             ? $this->optionValues->pluck('value')->filter()->implode(' / ')
             : $this->optionValues()->pluck('value')->implode(' / ');
 
-        return $values ?: 'Default';
+        return $values ?: 'Standar';
     }
 }

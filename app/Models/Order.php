@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\FulfillmentStatus;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Enums\ShipmentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,10 +30,10 @@ use Illuminate\Support\Carbon;
  * @property string $shipping_service_name
  * @property string $shipping_etd
  * @property int $total
- * @property string $status
- * @property string $payment_status
- * @property string $delivery_status
- * @property string $fulfillment_status
+ * @property OrderStatus $status
+ * @property PaymentStatus $payment_status
+ * @property ShipmentStatus $delivery_status
+ * @property FulfillmentStatus $fulfillment_status
  * @property carbon|null $paid_at
  * @property carbon|null $stock_released_at
  * @property carbon|null $stock_shortage_at
@@ -58,6 +62,10 @@ class Order extends Model
     protected function casts(): array
     {
         return [
+            'status' => OrderStatus::class,
+            'payment_status' => PaymentStatus::class,
+            'delivery_status' => ShipmentStatus::class,
+            'fulfillment_status' => FulfillmentStatus::class,
             'paid_at' => 'datetime',
             'stock_released_at' => 'datetime',
             'stock_shortage_at' => 'datetime',

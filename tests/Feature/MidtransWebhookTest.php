@@ -1,6 +1,8 @@
 <?php
 
 use App\Jobs\GenerateAndEmailInvoice;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Category;
 use App\Models\Invoice;
 use App\Models\Order;
@@ -8,6 +10,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\UserAddress;
+use App\Services\MidtransService;
 use Illuminate\Support\Facades\Queue;
 
 function webhookOrder(array $overrides = []): array
@@ -30,7 +33,7 @@ function webhookOrder(array $overrides = []): array
         'shipping_address_id' => $address->id, 'subtotal' => 200000, 'discount_total' => 0,
         'shipping_cost' => 10000, 'payment_fee' => 0, 'shipping_courier_code' => 'jne',
         'shipping_courier_name' => 'JNE', 'shipping_service_code' => 'REG', 'shipping_service_name' => 'Regular',
-        'shipping_etd' => '2-3 hari', 'total' => 210000, 'payment_method' => 'bca_va',
+        'shipping_etd' => '2-3 hari', 'total' => 210000, 'payment_method' => 'midtrans_snap',
         'status' => 'pending_payment', 'payment_status' => 'pending', 'delivery_status' => 'pending',
         'fulfillment_status' => 'unfulfilled', 'stock_reserved_at' => now(),
     ], $overrides));
@@ -42,7 +45,7 @@ function webhookOrder(array $overrides = []): array
     ]);
     Payment::create([
         'order_id' => $order->id, 'provider' => 'midtrans', 'provider_order_id' => $order->order_no,
-        'payment_type' => 'bca_va', 'status' => 'pending', 'gross_amount' => $order->total,
+        'payment_type' => 'midtrans_snap', 'status' => 'pending', 'gross_amount' => $order->total,
     ]);
     Invoice::create(['order_id' => $order->id, 'invoice_no' => $order->invoice_no]);
 
@@ -72,7 +75,7 @@ test('verified settlement is idempotent and queues one invoice', function () {
     $this->postJson('/api/midtrans/webhook', $payload)->assertOk();
     $this->postJson('/api/midtrans/webhook', $payload)->assertOk();
 
-    expect($order->fresh()->payment_status)->toBe('paid')
+    expect($order->fresh()->payment_status)->toBe(PaymentStatus::Paid)
         ->and($variant->fresh()->stock_quantity)->toBe(3)
         ->and(Payment::first()->raw_response->offsetExists('signature_key'))->toBeFalse();
     Queue::assertPushed(GenerateAndEmailInvoice::class, 1);
@@ -85,7 +88,7 @@ test('expired payment releases reserved stock only once', function () {
     $this->postJson('/api/midtrans/webhook', $payload)->assertOk();
     $this->postJson('/api/midtrans/webhook', $payload)->assertOk();
 
-    expect($order->fresh()->payment_status)->toBe('expired')
+    expect($order->fresh()->payment_status)->toBe(PaymentStatus::Expired)
         ->and($variant->fresh()->stock_quantity)->toBe(5);
 });
 
@@ -95,5 +98,47 @@ test('invalid midtrans signature is rejected', function () {
     $payload['signature_key'] = str_repeat('0', 128);
 
     $this->postJson('/api/midtrans/webhook', $payload)->assertForbidden();
-    expect($order->fresh()->payment_status)->toBe('pending');
+    expect($order->fresh()->payment_status)->toBe(PaymentStatus::Pending);
+});
+
+test('paid order cannot be downgraded by a late failed webhook', function () {
+    ['order' => $order, 'variant' => $variant] = webhookOrder();
+
+    $this->postJson('/api/midtrans/webhook', signedPayload($order, 'settlement'))->assertOk();
+    $this->postJson('/api/midtrans/webhook', signedPayload($order, 'expire'))->assertOk();
+
+    expect($order->fresh()->payment_status)->toBe(PaymentStatus::Paid)
+        ->and($order->fresh()->status)->toBe(OrderStatus::Processing)
+        ->and(Payment::first()->status)->toBe('settlement')
+        ->and($variant->fresh()->stock_quantity)->toBe(3);
+});
+
+test('expired order cannot be reactivated by a late pending webhook', function () {
+    ['order' => $order, 'variant' => $variant] = webhookOrder();
+
+    $this->postJson('/api/midtrans/webhook', signedPayload($order, 'expire'))->assertOk();
+    $this->postJson('/api/midtrans/webhook', signedPayload($order, 'pending'))->assertOk();
+
+    expect($order->fresh()->payment_status)->toBe(PaymentStatus::Expired)
+        ->and($order->fresh()->status)->toBe(OrderStatus::Cancelled)
+        ->and(Payment::first()->status)->toBe('expire')
+        ->and($variant->fresh()->stock_quantity)->toBe(5);
+});
+
+test('unsupported midtrans transaction status is rejected', function () {
+    ['order' => $order] = webhookOrder();
+    $payload = signedPayload($order, 'refund');
+
+    $this->postJson('/api/midtrans/webhook', $payload)->assertUnprocessable();
+    expect($order->fresh()->payment_status)->toBe(PaymentStatus::Pending);
+});
+
+test('snap payload lets midtrans display every enabled payment method', function () {
+    ['order' => $order] = webhookOrder();
+
+    $payload = app(MidtransService::class)->buildSnapPayload($order->fresh('items'));
+
+    expect($payload)->not->toHaveKey('enabled_payments')
+        ->and($payload['transaction_details']['order_id'])->toBe($order->order_no)
+        ->and($payload['transaction_details']['gross_amount'])->toBe($order->total);
 });

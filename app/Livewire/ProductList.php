@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Enums\PaymentStatus;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CartService;
@@ -41,7 +42,7 @@ class ProductList extends Component
 
         $cart->add(Auth::user(), $variantId);
         $this->dispatch('cartUpdated');
-        $this->dispatch('alert', type: 'success', message: 'Produk ditambahkan ke keranjang.');
+        $this->dispatch('toast', variant: 'success', message: 'Produk ditambahkan ke keranjang.');
 
         return null;
     }
@@ -51,6 +52,10 @@ class ProductList extends Component
         $products = Product::query()
             ->active()
             ->with(['images', 'category', 'defaultVariant.optionValues', 'activeVariants'])
+            ->withSum([
+                'orderItems as sold_quantity' => fn ($query) => $query
+                    ->whereHas('order', fn ($orders) => $orders->where('payment_status', PaymentStatus::Paid->value)),
+            ], 'quantity')
             ->whereHas('activeVariants')
             ->when($this->search, fn ($query) => $query->where(function ($query) {
                 $query->where('name', 'like', '%'.$this->search.'%')

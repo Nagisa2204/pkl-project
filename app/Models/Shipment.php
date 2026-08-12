@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ShipmentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -18,6 +19,9 @@ use Illuminate\Support\Carbon;
  * @property string $phone
  * @property string $address_line
  * @property string $courier_note
+ * @property int|null $origin_id
+ * @property string|null $origin_label
+ * @property string|null $origin_address
  * @property int $destination_id
  * @property string $destination_label
  * @property string $courier_code
@@ -27,7 +31,7 @@ use Illuminate\Support\Carbon;
  * @property int $cost
  * @property string $etd
  * @property string $awb_number
- * @property string $status
+ * @property ShipmentStatus $status
  * @property string $raw_response
  * @property Carbon|null $shipped_at
  * @property Carbon|null $delivered_at
@@ -38,7 +42,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'order_id', 'user_address_id', 'receiver_name', 'phone', 'address_line',
     'province_name', 'city_name', 'district_name', 'subdistrict_name', 'postal_code',
-    'courier_note', 'destination_id', 'destination_label', 'courier_code',
+    'courier_note', 'origin_id', 'origin_label', 'origin_address', 'destination_id', 'destination_label', 'courier_code',
     'courier_name', 'service_code', 'service_name', 'cost', 'etd', 'awb_number',
     'status', 'raw_response', 'shipped_at', 'delivered_at',
 ])]
@@ -55,6 +59,7 @@ class Shipment extends Model
     protected function casts(): array
     {
         return [
+            'status' => ShipmentStatus::class,
             'raw_response' => AsArrayObject::class, 
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',

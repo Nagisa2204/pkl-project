@@ -129,7 +129,8 @@ return [
 
     'navigate' => [
         'show_progress_bar' => true,
-        'progress_bar_color' => '#2299dd',
+        // Warna visual dioverride oleh token --primary di resources/css/app.css.
+        'progress_bar_color' => 'transparent',
     ],
 
     /*

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Enums\StockStatus;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
@@ -62,7 +63,7 @@ class AdminManageProduct extends Component
             'price' => $variant->price,
             'compare_at_price' => $variant->compare_at_price,
             'stock_quantity' => $variant->stock_quantity,
-            'stock_status' => $variant->stock_status,
+            'stock_status' => $variant->stock_status->value,
             'weight_grams' => $variant->weight_grams,
             'preorder_days' => $variant->preorder_days,
             'is_default' => $variant->is_default,
@@ -91,14 +92,8 @@ class AdminManageProduct extends Component
 
     public function generateVariants(): void
     {
-        $optionSets = collect($this->options)->map(function ($option) {
-            $name = trim((string) ($option['name'] ?? ''));
-            $values = collect(explode(',', (string) ($option['values'] ?? '')))
-                ->map(fn ($value) => trim($value))->filter()->unique(fn ($value) => mb_strtolower($value))->values()->all();
-            return compact('name', 'values');
-        })->filter(fn ($option) => $option['name'] !== '' && $option['values'] !== [])->values()->all();
-
-        $old = collect($this->variants)->keyBy(fn ($variant) => mb_strtolower((string) ($variant['label'] ?? '')));
+        $this->resetErrorBag('variants');
+        $optionSets = $this->normalizedOptionSets();
         $combinations = [[]];
 
         foreach ($optionSets as $option) {
@@ -115,14 +110,50 @@ class AdminManageProduct extends Component
             $combinations = [[]];
         }
 
-        $this->variants = collect($combinations)->map(function ($selection, $index) use ($old) {
-            $label = $selection ? implode(' / ', array_values($selection)) : 'Default';
-            return $old->get(mb_strtolower($label), $this->emptyVariant($selection, $index === 0)) + [
-                'label' => $label,
-                'selection' => $selection,
-                'is_default' => $index === 0,
-            ];
-        })->values()->all();
+        if (count($combinations) > 100) {
+            $this->addError('variants', 'Kombinasi varian melebihi batas 100. Kurangi jumlah opsi atau nilai opsi.');
+
+            return;
+        }
+
+        $oldVariants = array_values($this->variants);
+        $usedOldIndexes = [];
+        $usedSkus = [];
+        $generated = [];
+
+        foreach ($combinations as $index => $selection) {
+            $sourceIndex = $this->findVariantMatch($oldVariants, $selection, $usedOldIndexes, exact: true)
+                ?? $this->findVariantMatch($oldVariants, $selection, $usedOldIndexes)
+                ?? $this->findVariantReductionMatch($oldVariants, $selection, $usedOldIndexes);
+            $isPreserved = $sourceIndex !== null;
+
+            if ($isPreserved) {
+                $variant = $oldVariants[$sourceIndex];
+                $usedOldIndexes[] = $sourceIndex;
+            } else {
+                $templateIndex = $this->findVariantMatch($oldVariants, $selection, [], allowUsed: true);
+                $variant = $templateIndex !== null
+                    ? $this->cloneVariantForCombination($oldVariants[$templateIndex], $selection, $usedSkus)
+                    : $this->emptyVariant($selection, false);
+            }
+
+            $label = $selection ? implode(' / ', array_values($selection)) : 'Standar';
+            $variant['label'] = $label;
+            $variant['selection'] = $selection;
+            $variant['is_default'] = $index === 0;
+
+            if (blank($variant['sku'] ?? null) && blank($variant['id'] ?? null)) {
+                $variant['sku'] = $this->uniqueSkuSuggestion($selection, $usedSkus);
+            }
+
+            if (filled($variant['sku'] ?? null)) {
+                $usedSkus[] = mb_strtolower((string) $variant['sku']);
+            }
+
+            $generated[] = $variant;
+        }
+
+        $this->variants = $generated;
     }
 
     public function save(): mixed
@@ -144,7 +175,7 @@ class AdminManageProduct extends Component
             'variants.*.price' => ['required', 'integer', 'min:0'],
             'variants.*.compare_at_price' => ['nullable', 'integer', 'gt:variants.*.price'],
             'variants.*.stock_quantity' => ['required', 'integer', 'min:0'],
-            'variants.*.stock_status' => ['required', Rule::in(['available', 'preorder', 'out_of_stock'])],
+            'variants.*.stock_status' => ['required', Rule::enum(StockStatus::class)],
             'variants.*.weight_grams' => ['required', 'integer', 'min:0'],
             'variants.*.preorder_days' => ['required', 'integer', 'min:0'],
             'variants.*.is_active' => ['boolean'],
@@ -152,6 +183,11 @@ class AdminManageProduct extends Component
             'gallery.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ];
         $this->validate($rules);
+
+        $optionNames = collect($this->normalizedOptionSets())->pluck('name');
+        if ($optionNames->map(fn ($name) => mb_strtolower($name))->duplicates()->isNotEmpty()) {
+            $this->addError('options', 'Nama opsi tidak boleh duplikat.');
+        }
 
         foreach ($this->variants as $index => $variant) {
             $duplicate = ProductVariant::withTrashed()->where('sku', $variant['sku'])
@@ -222,7 +258,11 @@ class AdminManageProduct extends Component
             }
 
             $product->variants()->whereNotIn('id', $keptVariantIds)->delete();
-            $product->options()->when($keptOptionIds, fn ($query) => $query->whereNotIn('id', $keptOptionIds))->delete();
+            $staleOptions = $product->options();
+            if ($keptOptionIds !== []) {
+                $staleOptions->whereNotIn('id', $keptOptionIds);
+            }
+            $staleOptions->delete();
 
             $next = (int) ($product->images()->max('sort_order') ?? -1);
             $hasPrimary = $product->images()->where('is_primary', true)->exists();
@@ -253,6 +293,7 @@ class AdminManageProduct extends Component
             $this->product->images()->whereKey($imageId)->update(['is_primary' => true]);
         });
         $this->product->load('images');
+        $this->dispatch('toast', variant: 'success', message: 'Gambar utama berhasil diperbarui.');
     }
 
     public function deleteImage(int $imageId): void
@@ -264,6 +305,7 @@ class AdminManageProduct extends Component
         $image->delete();
         if ($wasPrimary) $this->product->images()->orderBy('sort_order')->first()?->update(['is_primary' => true]);
         $this->product->load('images');
+        $this->dispatch('toast', variant: 'success', message: 'Gambar berhasil dihapus.');
     }
 
     public function delete(): mixed
@@ -276,10 +318,118 @@ class AdminManageProduct extends Component
 
     private function emptyVariant(array $selection, bool $default): array
     {
-        $label = $selection ? implode(' / ', array_values($selection)) : 'Default';
+        $label = $selection ? implode(' / ', array_values($selection)) : 'Standar';
         return ['id' => null, 'label' => $label, 'selection' => $selection, 'sku' => '', 'price' => 0,
-            'compare_at_price' => null, 'stock_quantity' => 0, 'stock_status' => 'available',
+            'compare_at_price' => null, 'stock_quantity' => 0, 'stock_status' => StockStatus::Available->value,
             'weight_grams' => 0, 'preorder_days' => 0, 'is_default' => $default, 'is_active' => true];
+    }
+
+    /**
+     * @return list<array{name: string, values: list<string>}>
+     */
+    private function normalizedOptionSets(): array
+    {
+        return collect($this->options)->map(function (array $option): array {
+            $name = trim((string) ($option['name'] ?? ''));
+            $values = collect(explode(',', (string) ($option['values'] ?? '')))
+                ->map(fn ($value) => trim($value))
+                ->filter()
+                ->unique(fn ($value) => mb_strtolower($value))
+                ->values()
+                ->all();
+
+            return compact('name', 'values');
+        })->filter(fn (array $option) => $option['name'] !== '' && $option['values'] !== [])->values()->all();
+    }
+
+    private function findVariantMatch(
+        array $variants,
+        array $selection,
+        array $usedIndexes,
+        bool $exact = false,
+        bool $allowUsed = false,
+    ): ?int {
+        $matches = [];
+
+        foreach ($variants as $index => $variant) {
+            if (! $allowUsed && in_array($index, $usedIndexes, true)) {
+                continue;
+            }
+
+            $oldSelection = (array) ($variant['selection'] ?? []);
+            if ($exact && count($oldSelection) !== count($selection)) {
+                continue;
+            }
+
+            if ($this->selectionIsSubset($oldSelection, $selection)) {
+                $matches[$index] = count($oldSelection);
+            }
+        }
+
+        if ($matches === []) {
+            return null;
+        }
+
+        arsort($matches);
+
+        return (int) array_key_first($matches);
+    }
+
+    private function selectionIsSubset(array $subset, array $selection): bool
+    {
+        $normalizedSelection = collect($selection)->mapWithKeys(
+            fn ($value, $name) => [mb_strtolower(trim((string) $name)) => mb_strtolower(trim((string) $value))]
+        );
+
+        foreach ($subset as $name => $value) {
+            if ($normalizedSelection->get(mb_strtolower(trim((string) $name))) !== mb_strtolower(trim((string) $value))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function findVariantReductionMatch(array $variants, array $selection, array $usedIndexes): ?int
+    {
+        foreach ($variants as $index => $variant) {
+            if (in_array($index, $usedIndexes, true)) {
+                continue;
+            }
+
+            if ($this->selectionIsSubset($selection, (array) ($variant['selection'] ?? []))) {
+                return $index;
+            }
+        }
+
+        return null;
+    }
+
+    private function cloneVariantForCombination(array $source, array $selection, array $usedSkus): array
+    {
+        $clone = $source;
+        $clone['id'] = null;
+        $clone['stock_quantity'] = 0;
+        $clone['is_default'] = false;
+        $clone['is_active'] = false;
+        $clone['sku'] = $this->uniqueSkuSuggestion($selection, $usedSkus, (string) ($source['sku'] ?? ''));
+
+        return $clone;
+    }
+
+    private function uniqueSkuSuggestion(array $selection, array $usedSkus, string $base = ''): string
+    {
+        $prefix = Str::upper(Str::slug($base ?: $this->slug ?: $this->name ?: 'VARIAN'));
+        $suffix = Str::upper(Str::slug(implode('-', array_values($selection))));
+        $candidate = Str::limit(trim($prefix.'-'.$suffix, '-'), 245, '');
+        $candidate = $candidate !== '' ? $candidate : 'VARIAN';
+        $sequence = 2;
+
+        while (in_array(mb_strtolower($candidate), $usedSkus, true)) {
+            $candidate = Str::limit(preg_replace('/-\d+$/', '', $candidate) ?: $candidate, 240, '').'-'.$sequence++;
+        }
+
+        return $candidate;
     }
 
     public function render()
