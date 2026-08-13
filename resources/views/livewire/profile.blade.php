@@ -14,7 +14,7 @@
             </div>
                
             <div class="col-span-2">
-                <div x-show="activeTab === 'profile'" x-cloak class="grid grid-cols-2 gap-4">
+                <div x-show="activeTab === 'profile'" x-cloak class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div class="ui-card p-4 sm:p-8">
                         <div class="max-w-xl">
                             <livewire:profile.update-profile-information-form />
