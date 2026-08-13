@@ -147,6 +147,15 @@ new class extends Component {
             </div>
 
             <div class="-me-2 flex items-center sm:hidden">
+                <a href="{{ route('cart') }}" wire:navigate
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-default bg-surface text-muted-foreground font-semibold text-sm hover:bg-subtle transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="full" stroke-width="1.8"
+                        class="w-4 h-4 {{ request()->routeIs('product.*') ? '!text-primary-foreground' : 'text-muted-foreground' }}">
+                        <path
+                            d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.25a.75.75 0 0 0 .734-.6l1.5-7.5a.75.75 0 0 0-.734-.9H5.532l-.464-1.74A1.875 1.875 0 0 0 3.636 2.25H2.25Z" />
+                    </svg>
+                </a>
+                
                 <button @click="open = ! open"
                     class="inline-flex items-center justify-center p-2 rounded-md text-muted hover:text-muted hover:bg-subtle focus:outline-none focus:bg-subtle focus:text-muted transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -166,6 +175,7 @@ new class extends Component {
             <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')" wire:navigate>
                 {{ __('Beranda') }}
             </x-responsive-nav-link>
+            
             <x-responsive-nav-link :href="route('product.index')" :active="request()->routeIs('product.*')" wire:navigate>
                 {{ __('Katalog') }}
             </x-responsive-nav-link>
