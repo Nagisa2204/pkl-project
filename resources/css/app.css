@@ -5,12 +5,15 @@
 @layer base {
     :root {
         /* Ubah nilai token berikut untuk mengganti tema seluruh aplikasi. */
-        --primary: 79 70 229;
+        --primary: 99 102 241;
         --primary-hover: 67 56 202;
         --primary-foreground: 255 255 255;
         --secondary: 71 85 105;
         --secondary-hover: 51 65 85;
         --secondary-foreground: 255 255 255;
+        --accent: 15 23 42;
+        --accent-hover: 30 41 59;
+        --accent-foreground: 255 255 255;
         --success: 5 150 105;
         --success-soft: 236 253 245;
         --warning: 217 119 6;

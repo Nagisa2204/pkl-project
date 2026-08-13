@@ -30,8 +30,7 @@ new class extends Component {
                 </a>
             </div>
 
-            <div
-                class="hidden items-center gap-2 rounded-full border border-default bg-surface px-4 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-subtle md:inline-flex">
+            <div class="hidden items-center gap-2 rounded-full border border-default bg-surface px-4 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-subtle md:inline-flex">
                 <a href="{{ route('home') }}" wire:navigate
                     class="flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-150
                     {{ request()->routeIs('home')
@@ -52,10 +51,10 @@ new class extends Component {
                     {{ request()->routeIs('product.*')
                         ? '!bg-dark !text-primary-foreground'
                         : 'text-muted-foreground hover:text-content hover:bg-subtle' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                        class="w-4 h-4 {{ request()->routeIs('product.*') ? '!text-primary-foreground' : 'text-muted-foreground' }}">
-                        <path
-                            d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.25a.75.75 0 0 0 .734-.6l1.5-7.5a.75.75 0 0 0-.734-.9H5.532l-.464-1.74A1.875 1.875 0 0 0 3.636 2.25H2.25Z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke-width="1.8"
+                        stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                     </svg>
                     <span>Katalog</span>
                 </a>
@@ -80,11 +79,11 @@ new class extends Component {
             <div class="hidden sm:flex sm:items-center sm:gap-3">
 
                 <a href="{{ route('cart') }}" wire:navigate
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-default bg-surface text-muted-foreground font-semibold text-sm hover:bg-subtle transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
-                        stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-default bg-surface text-muted-foreground font-semibold text-sm hover:bg-subtle transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="full" stroke-width="1.8"
+                        class="w-4 h-4 {{ request()->routeIs('product.*') ? '!text-primary-foreground' : 'text-muted-foreground' }}">
+                        <path
+                            d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.25a.75.75 0 0 0 .734-.6l1.5-7.5a.75.75 0 0 0-.734-.9H5.532l-.464-1.74A1.875 1.875 0 0 0 3.636 2.25H2.25Z" />
                     </svg>
                     <span>Keranjang</span>
 
@@ -103,10 +102,15 @@ new class extends Component {
                 @endguest
 
                 @auth
-                    <x-dropdown align="right" width="48">
+                    <x-dropdown align="right" width="auto">
                         <x-slot name="trigger">
                             <button
-                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-muted bg-surface hover:text-muted-foreground focus:outline-none transition ease-in-out duration-150">
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-default bg-surface text-muted-foreground font-semibold text-sm hover:bg-subtle transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="full" viewBox="0 0 24 24" stroke-width="1.5"
+                                    stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 15 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                </svg>
                                 <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
                                     x-on:profile-updated.window="name = $event.detail.name"></div>
 

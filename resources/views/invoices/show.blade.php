@@ -13,7 +13,7 @@
         }
     </style>
 </head>
-<body class="bg-canvas p-4 sm:p-8">
+<body class="bg-canvas p-5 sm:p-8">
     <main class="invoice-sheet ui-card mx-auto max-w-5xl p-5 sm:p-8">
         <div class="no-print mb-5 flex justify-end">
             <x-ui.button onclick="window.print()">Cetak / Simpan PDF</x-ui.button>
@@ -42,12 +42,12 @@
             @endif
         </section>
 
-        <div class="ui-table-wrap mt-6">
+        <div class="overflow-hidden mt-6 rounded-xl border border-default">
             <table class="ui-table">
-                <thead><tr><th>Produk</th><th>SKU</th><th class="text-right">Harga</th><th class="text-right">Jumlah</th><th class="text-right">Subtotal</th></tr></thead>
+                <thead><tr><th>Produk</th><th>SKU</th><th>Harga</th><th>Jumlah</th><th>Subtotal</th></tr></thead>
                 <tbody>
                     @foreach($order->items as $item)
-                        <tr><td>{{ $item->product_name }}<div class="text-xs text-muted">{{ $item->variant_name }}</div></td><td>{{ $item->sku }}</td><td class="text-right">Rp {{ number_format($item->product_price, 0, ',', '.') }}</td><td class="text-right">{{ $item->quantity }}</td><td class="text-right">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td></tr>
+                        <tr><td>{{ $item->product_name }}<div class="text-xs text-muted">{{ $item->variant_name }}</div></td><td>{{ $item->sku }}</td><td>Rp {{ number_format($item->product_price, 0, ',', '.') }}</td><td>{{ $item->quantity }}</td><td>Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td></tr>
                     @endforeach
                 </tbody>
             </table>
