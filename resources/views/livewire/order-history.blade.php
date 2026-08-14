@@ -5,7 +5,7 @@
         <p class="mt-1 text-sm text-muted">Pantau pembelian seluruh pesanan.</p>
     </div>
 
-    <div class="overflow-hidden mt-6 rounded-xl border border-default">
+    <div class="ui-table-wrap mt-6 rounded-xl border border-default">
         <table class="ui-table">
             <thead>
                 <tr>

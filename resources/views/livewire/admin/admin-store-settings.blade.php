@@ -1,4 +1,4 @@
-<div class="mx-auto max-w-5xl space-y-6">
+<div class="mx-auto w-full space-y-6">
     <div>
         <h1 class="text-2xl font-bold text-content">Pengaturan Toko</h1>
         <p class="mt-1 text-sm text-muted">Informasi ini digunakan pada header, footer, checkout, invoice, email, dan
@@ -14,6 +14,7 @@
         'phone' => 'Telepon',
         'whatsapp' => 'WhatsApp',
         'website_url' => 'URL website',
+        'store-hours' => 'Jam operasional',
     ] as $field => $label)
                 <div>
                     <label class="ui-field-label" for="store-{{ $field }}">{{ $label }}</label>
@@ -27,12 +28,6 @@
             <label class="ui-field-label" for="store-description">Deskripsi</label>
             <textarea id="store-description" wire:model="description" rows="3" class="ui-field"></textarea>
             <x-input-error :messages="$errors->get('description')" />
-        </div>
-
-        <div class="mt-4">
-            <label class="ui-field-label" for="store-hours">Jam operasional</label>
-            <textarea id="store-hours" wire:model="operating_hours" rows="2" class="ui-field"></textarea>
-            <x-input-error :messages="$errors->get('operating_hours')" />
         </div>
     </x-ui.card>
 

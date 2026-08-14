@@ -42,7 +42,7 @@
             @endif
         </section>
 
-        <div class="overflow-hidden mt-6 rounded-xl border border-default">
+        <div class="ui-table-wrap mt-6 rounded-xl border border-default">
             <table class="ui-table">
                 <thead><tr><th>Produk</th><th>SKU</th><th>Harga</th><th>Jumlah</th><th>Subtotal</th></tr></thead>
                 <tbody>

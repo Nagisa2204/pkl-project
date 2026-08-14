@@ -1,9 +1,10 @@
 <div class="contents">
     <div class="space-y-6">
-        <div class="flex items-center justify-between">
+        <div>
             <h1 class="text-2xl font-bold text-content">
                 Dashboard Admin
             </h1>
+            <p class="mt-1 text-sm text-muted">Ringkasan data penjualan.</p>
         </div>
 
         <div class="flex justify-between items-center mb-4">

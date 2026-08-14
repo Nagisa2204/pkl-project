@@ -77,8 +77,6 @@
             <x-ui.button wire:click="generateVariants" wire:loading.attr="disabled" wire:target="generateVariants">
                 Sinkronkan Kombinasi Varian
             </x-ui.button>
-            <p class="text-xs leading-5 text-muted">Varian lama dipertahankan. Kombinasi baru dibuat nonaktif dengan
-                stok 0 agar dapat ditinjau terlebih dahulu.</p>
         </div>
     </x-ui.card>
 
@@ -94,12 +92,12 @@
                     <tr>
                         <th>Varian</th>
                         <th>SKU</th>
-                        <th class="text-right">Harga</th>
-                        <th class="text-right">Harga Coret</th>
-                        <th class="text-right">Stok</th>
+                        <th>Harga</th>
+                        <th>Harga Coret</th>
+                        <th>Stok</th>
                         <th>Status Stok</th>
-                        <th class="text-right">Berat (g)</th>
-                        <th class="text-right">Preorder (hari)</th>
+                        <th>Berat (g)</th>
+                        <th>Preorder (hari)</th>
                         <th class="text-center">Aktif</th>
                     </tr>
                 </thead>
