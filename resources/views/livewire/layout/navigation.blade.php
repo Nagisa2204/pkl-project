@@ -146,7 +146,7 @@ new class extends Component {
                 @endauth
             </div>
 
-            <div class="-me-2 flex items-center sm:hidden">
+            <div class="me-2 flex items-center sm:hidden gap-2">
                 <a href="{{ route('cart') }}" wire:navigate
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-default bg-surface text-muted-foreground font-semibold text-sm hover:bg-subtle transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="full" stroke-width="1.8"

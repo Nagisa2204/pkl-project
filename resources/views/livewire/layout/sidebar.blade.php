@@ -52,6 +52,12 @@ new class extends Component
 
         <div class="border-t border-default p-4">
             <div class="min-w-0">
+                <a href="{{ route('home') }}" wire:navigate class="truncate text-sm font-semibold text-content">Kembali ke Toko</a>
+            </div>
+        </div>
+
+        <div class="border-t border-default p-4">
+            <div class="min-w-0">
                 <div class="truncate text-sm font-semibold text-content" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
                 <div class="truncate text-xs text-muted">{{ auth()->user()->email }}</div>
             </div>

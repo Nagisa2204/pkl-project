@@ -6,13 +6,13 @@
     :root {
         /* Ubah nilai token berikut untuk mengganti tema seluruh aplikasi. */
         --primary: 99 102 241;
-        --primary-hover: 67 56 202;
+        --primary-hover: 0 0 139;
         --primary-foreground: 255 255 255;
         --secondary: 71 85 105;
         --secondary-hover: 51 65 85;
         --secondary-foreground: 255 255 255;
         --accent: 15 23 42;
-        --accent-hover: 30 41 59;
+        --accent-hover: 25 200 25;
         --accent-foreground: 255 255 255;
         --success: 5 150 105;
         --success-soft: 236 253 245;
@@ -187,7 +187,6 @@
 
     .ui-table-wrap {
         @apply w-full overflow-x-auto overscroll-x-contain rounded-ui-lg border border-default bg-surface;
-        scrollbar-gutter: stable;
     }
 
     .ui-table {
