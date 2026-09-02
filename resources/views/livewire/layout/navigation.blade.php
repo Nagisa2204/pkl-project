@@ -76,7 +76,7 @@ new class extends Component {
                 @endauth
             </div>
 
-            <div class="hidden sm:flex sm:items-center sm:gap-3">
+            <div class="hidden md:flex md:items-center md:gap-3">
 
                 <a href="{{ route('cart') }}" wire:navigate
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-default bg-surface text-muted-foreground font-semibold text-sm hover:bg-subtle transition-all">
@@ -146,7 +146,7 @@ new class extends Component {
                 @endauth
             </div>
 
-            <div class="me-2 flex items-center sm:hidden gap-2">
+            <div class="me-2 flex items-center md:hidden gap-2">
                 <a href="{{ route('cart') }}" wire:navigate
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-default bg-surface text-muted-foreground font-semibold text-sm hover:bg-subtle transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="full" stroke-width="1.8"
@@ -170,7 +170,7 @@ new class extends Component {
         </div>
     </div>
 
-    <div :class="{ 'block': open, 'hidden': !open }" class="hidden sm:hidden">
+    <div :class="{ 'block': open, 'hidden': !open }" class="hidden md:hidden">
         <div class="pt-2 pb-3 space-y-1 border-t border-default">
             <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')" wire:navigate>
                 {{ __('Beranda') }}

@@ -1,5 +1,6 @@
 <div>
-    <section class="bg-dark px-4 py-16 text-primary-foreground sm:py-20">
+    <section class="relative bg-dark px-4 py-16 text-primary-foreground sm:py-28 bg-cover bg-right bg-no-repeat" style="background-image: url('{{ asset('images/hero-bg.jpg') }}');">
+        <div class="absolute inset-0 bg-black/60 md:bg-transparent"></div>
         <div class="mx-auto max-w-6xl">
             <p class="text-sm font-bold uppercase tracking-widest text-info">Selamat datang</p>
             <h1 class="mt-3 max-w-3xl text-4xl font-extrabold md:text-6xl">{{ $storeSettings->store_name }}</h1>
